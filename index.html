@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Maqueta de SkinMarket, plataforma simulada de compra e intercambio de skins." />
+    <title>SkinMarket | Catálogo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#catalogo">Ir al catálogo</a>
+
+    <header class="site-header">
+      <a class="brand" href="#inicio" aria-label="SkinMarket, inicio">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>Skin<span>Market</span></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a class="active" href="#catalogo">Explorar</a>
+        <a href="#inventario">Inventario</a>
+        <a href="#intercambios">Intercambios</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="wallet" type="button" aria-label="Saldo virtual disponible">
+          <span class="wallet-dot" aria-hidden="true"></span>
+          <span>Saldo</span>
+          <strong id="saldo-header">$325.00</strong>
+        </button>
+        <button class="cart-button" id="abrir-carrito" type="button" aria-label="Abrir carro, 0 artículos">
+          <span aria-hidden="true">⌑</span> Carro <b id="contador-carro">0</b>
+        </button>
+        <button class="profile-button" id="abrir-acceso" type="button" aria-label="Abrir acceso a cuenta">Acceso</button>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> Mercado en vivo</p>
+          <h1 id="hero-title">Tu próxima skin<br /><em>está aquí.</em></h1>
+          <p class="hero-text">Explora piezas únicas para tu inventario. Compra e intercambia con tu saldo virtual, sin salir de la partida.</p>
+          <a class="hero-cta" href="#catalogo">Ver catálogo <span aria-hidden="true">↘</span></a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-grid"></div>
+          <div class="hero-orb orb-one"></div>
+          <div class="hero-orb orb-two"></div>
+          <div class="weapon hero-weapon">
+            <div class="weapon-stock"></div><div class="weapon-body"></div><div class="weapon-mag"></div><div class="weapon-barrel"></div><div class="weapon-sight"></div>
+          </div>
+          <p class="hero-card-label">EDICIÓN<br /><strong>CYBER</strong><br />SEASON 04</p>
+        </div>
+      </section>
+
+      <section class="market-section" id="catalogo" aria-labelledby="catalogo-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow"><span></span> Mercado</p>
+            <h2 id="catalogo-title">Explora el catálogo</h2>
+          </div>
+          <p id="resultados" class="result-count" aria-live="polite">6 skins disponibles</p>
+        </div>
+
+        <div class="market-layout">
+          <aside class="filters" aria-label="Filtros del catálogo">
+            <div class="filter-title-row"><h3>Filtros</h3><button type="button" id="limpiar-filtros">Limpiar</button></div>
+            <label class="search-field" for="busqueda"><span aria-hidden="true">⌕</span><input id="busqueda" type="search" placeholder="Buscar una skin" aria-describedby="error-busqueda" /></label>
+            <p class="field-error search-error" id="error-busqueda" role="alert"></p>
+
+            <fieldset>
+              <legend>Rareza</legend>
+              <label><input type="checkbox" name="rareza" value="Legendaria" /> <span class="rarity-dot legendary"></span> Legendaria</label>
+              <label><input type="checkbox" name="rareza" value="Épica" /> <span class="rarity-dot epic"></span> Épica</label>
+              <label><input type="checkbox" name="rareza" value="Rara" /> <span class="rarity-dot rare"></span> Rara</label>
+              <label><input type="checkbox" name="rareza" value="Común" /> <span class="rarity-dot common"></span> Común</label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Juego</legend>
+              <label><input type="checkbox" name="juego" value="Strike Zone" /> Strike Zone</label>
+              <label><input type="checkbox" name="juego" value="Valorant" /> Valorant</label>
+              <label><input type="checkbox" name="juego" value="Apex Arena" /> Apex Arena</label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Precio máximo</legend>
+              <label class="range-label" for="precio-max"><span>Hasta</span><output id="precio-salida" for="precio-max">$500</output></label>
+              <input class="price-range" id="precio-max" type="range" min="25" max="500" step="25" value="500" />
+            </fieldset>
+          </aside>
+
+          <div class="catalogue-content">
+            <div class="catalogue-tools">
+              <div class="chips" aria-label="Filtros rápidos">
+                <button class="chip active" type="button" data-quick-filter="Todas">Todas</button>
+                <button class="chip" type="button" data-quick-filter="Destacadas">Destacadas</button>
+                <button class="chip" type="button" data-quick-filter="Nuevas">Nuevas</button>
+              </div>
+              <label class="sort-control" for="ordenar">Ordenar <select id="ordenar"><option value="featured">Destacadas</option><option value="low">Menor precio</option><option value="high">Mayor precio</option></select></label>
+            </div>
+
+            <div class="skin-grid" id="skin-grid"></div>
+            <p class="empty-state" id="sin-resultados" hidden>No encontramos skins con esos filtros. Prueba ajustando tu búsqueda.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="inventory-teaser" id="inventario" aria-labelledby="inventory-title">
+        <div>
+          <p class="eyebrow"><span></span> Tu cuenta</p>
+          <h2 id="inventory-title">Tu inventario, siempre listo.</h2>
+        </div>
+        <p>Gestiona tus artículos y mantén el control de cada movimiento desde un solo lugar.</p>
+        <button class="outline-button" id="ver-inventario" type="button">Ver mi inventario <span aria-hidden="true">→</span></button>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">S</span><span>Skin<span>Market</span></span></a>
+      <p>Maqueta académica - transacciones y saldo simulados.</p>
+      <p>© 2026 SkinMarket</p>
+    </footer>
+
+    <dialog id="carrito-dialog" aria-labelledby="carrito-title">
+      <div class="dialog-header"><div><p class="eyebrow"><span></span> Compra simulada</p><h2 id="carrito-title">Tu carro</h2></div><button class="icon-button" id="cerrar-carrito" type="button" aria-label="Cerrar carro">×</button></div>
+      <div id="lineas-carro" class="cart-lines"></div>
+      <p id="carro-vacio" class="cart-empty">Aún no agregas skins al carro.</p>
+      <div class="cart-total"><span>Total</span><strong id="total-carro">$0.00</strong></div>
+      <button class="checkout-button" id="comprar" type="button">Confirmar compra</button>
+      <p class="dialog-note">Esta acción es una simulación y no procesa pagos reales.</p>
+    </dialog>
+
+    <dialog id="mensaje-dialog" aria-labelledby="mensaje-title">
+      <button class="icon-button dialog-close" id="cerrar-mensaje" type="button" aria-label="Cerrar mensaje">×</button>
+      <p class="eyebrow"><span></span> SkinMarket</p><h2 id="mensaje-title">Inventario simulado</h2><p id="mensaje-contenido"></p>
+    </dialog>
+
+    <dialog id="inventario-dialog" aria-labelledby="inventario-dialog-title">
+      <div class="dialog-header"><div><p class="eyebrow"><span></span> Tu cuenta</p><h2 id="inventario-dialog-title">Mi inventario</h2></div><button class="icon-button" id="cerrar-inventario" type="button" aria-label="Cerrar inventario">×</button></div>
+      <p class="inventory-summary" id="resumen-inventario">0 skins adquiridas</p>
+      <div class="inventory-lines" id="lineas-inventario"></div>
+      <p class="cart-empty" id="inventario-vacio">Todavía no tienes skins adquiridas. Explora el catálogo para sumar tu primera pieza.</p>
+      <h3 class="history-title">Historial de compras</h3>
+      <div class="history-lines" id="lineas-historial"></div>
+      <p class="history-empty" id="historial-vacio">Aún no hay movimientos registrados.</p>
+    </dialog>
+
+    <dialog id="acceso-dialog" aria-labelledby="acceso-title">
+      <button class="icon-button dialog-close" id="cerrar-acceso" type="button" aria-label="Cerrar acceso">×</button>
+      <p class="eyebrow"><span></span> Tu cuenta</p><h2 id="acceso-title">Accede a SkinMarket</h2>
+      <div class="form-tabs" role="tablist" aria-label="Opciones de acceso">
+        <button class="form-tab active" type="button" role="tab" aria-selected="true" data-auth-tab="login">Iniciar sesión</button>
+        <button class="form-tab" type="button" role="tab" aria-selected="false" data-auth-tab="registro">Crear cuenta</button>
+      </div>
+      <form id="form-login" class="validated-form" novalidate>
+        <label for="login-correo">Correo electrónico<input id="login-correo" type="email" autocomplete="email" aria-describedby="error-login-correo" /></label><p class="field-error" id="error-login-correo" role="alert"></p>
+        <label for="login-clave">Contraseña<input id="login-clave" type="password" autocomplete="current-password" aria-describedby="error-login-clave" /></label><p class="field-error" id="error-login-clave" role="alert"></p>
+        <button class="checkout-button" type="submit">Ingresar</button>
+      </form>
+      <form id="form-registro" class="validated-form" novalidate hidden>
+        <label for="registro-nombre">Nombre<input id="registro-nombre" type="text" autocomplete="name" maxlength="40" aria-describedby="error-registro-nombre" /></label><p class="field-error" id="error-registro-nombre" role="alert"></p>
+        <label for="registro-correo">Correo electrónico<input id="registro-correo" type="email" autocomplete="email" aria-describedby="error-registro-correo" /></label><p class="field-error" id="error-registro-correo" role="alert"></p>
+        <label for="registro-clave">Contraseña<input id="registro-clave" type="password" autocomplete="new-password" aria-describedby="error-registro-clave" /></label><p class="field-error" id="error-registro-clave" role="alert"></p>
+        <button class="checkout-button" type="submit">Crear cuenta</button>
+      </form>
+      <button class="admin-link" id="abrir-admin" type="button">Acceso de administrador (demo)</button>
+    </dialog>
+
+    <dialog id="admin-dialog" aria-labelledby="admin-title">
+      <button class="icon-button dialog-close" id="cerrar-admin" type="button" aria-label="Cerrar panel administrativo">×</button>
+      <p class="eyebrow"><span></span> Administrador</p><h2 id="admin-title">Agregar skin</h2>
+      <form id="form-admin" class="validated-form" novalidate>
+        <label for="admin-nombre">Nombre de la skin<input id="admin-nombre" type="text" maxlength="60" aria-describedby="error-admin-nombre" /></label><p class="field-error" id="error-admin-nombre" role="alert"></p>
+        <label for="admin-juego">Juego<select id="admin-juego" aria-describedby="error-admin-juego"><option value="">Selecciona un juego</option><option>Strike Zone</option><option>Valorant</option><option>Apex Arena</option></select></label><p class="field-error" id="error-admin-juego" role="alert"></p>
+        <label for="admin-rareza">Rareza<select id="admin-rareza" aria-describedby="error-admin-rareza"><option value="">Selecciona rareza</option><option>Común</option><option>Rara</option><option>Épica</option><option>Legendaria</option></select></label><p class="field-error" id="error-admin-rareza" role="alert"></p>
+        <div class="form-row"><div><label for="admin-precio">Precio<input id="admin-precio" type="number" min="0" step="0.01" inputmode="decimal" aria-describedby="error-admin-precio" /></label><p class="field-error" id="error-admin-precio" role="alert"></p></div><div><label for="admin-stock">Stock<input id="admin-stock" type="number" min="0" step="1" inputmode="numeric" aria-describedby="error-admin-stock" /></label><p class="field-error" id="error-admin-stock" role="alert"></p></div></div>
+        <button class="checkout-button" type="submit">Guardar skin</button>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
