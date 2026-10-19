@@ -1,0 +1,39 @@
+/* Bootstrap controla columnas y breakpoints; esta capa conserva la identidad gamer. */
+body {
+  color: #f0f0f7;
+  background: #090d16;
+  font-family: Inter, Arial, sans-serif;
+}
+.product-grid.row {
+  display: flex;
+  gap: 0;
+}
+.product-grid.row > .col {
+  display: flex;
+}
+.product-grid.row .product-card {
+  width: 100%;
+}
+.auth-layout.row {
+  display: flex;
+}
+.form-control {
+  color: #f0f0f7;
+  background-color: #191f2b;
+  border-color: #2a3140;
+}
+.form-control:focus {
+  color: #f0f0f7;
+  background-color: #191f2b;
+  border-color: #aa7bff;
+  box-shadow: 0 0 0 .2rem #8b4dff33;
+}
+.invalid-feedback {
+  display: block;
+}
+.filters-panel legend {
+  float: none;
+  width: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
