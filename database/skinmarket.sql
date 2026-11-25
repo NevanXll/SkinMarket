@@ -22,6 +22,10 @@ CREATE TABLE `accounts` (
   `balance` decimal(19,2) NOT NULL DEFAULT '12500.00',
   `auth_version` bigint NOT NULL DEFAULT '0',
   `version` bigint NOT NULL DEFAULT '0',
+  `avatar` varchar(20) NOT NULL DEFAULT 'initial',
+  `bio` varchar(240) NOT NULL DEFAULT '',
+  `show_email` bit(1) NOT NULL DEFAULT b'0',
+  `show_header_balance` bit(1) NOT NULL DEFAULT b'1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   CONSTRAINT `ck_account_role` CHECK ((`role` in (_utf8mb4'ADMIN',_utf8mb4'CLIENTE',_utf8mb4'VENDEDOR'))),
@@ -115,12 +119,13 @@ CREATE TABLE `refresh_sessions` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `seller_applications` (
   `user_id` varchar(64) NOT NULL,
-  `skins` varchar(500) NOT NULL,
+  `skins` varchar(500) DEFAULT NULL,
   `reason` varchar(1000) NOT NULL,
   `status` varchar(16) NOT NULL,
   `submitted_at` timestamp(6) NOT NULL,
   `reviewed_at` timestamp(6) NULL DEFAULT NULL,
   `review_note` varchar(500) DEFAULT NULL,
+  `experience` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   CONSTRAINT `fk_seller_applicant` FOREIGN KEY (`user_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
   CONSTRAINT `ck_seller_application_status` CHECK ((`status` in (_utf8mb4'PENDIENTE',_utf8mb4'APROBADA',_utf8mb4'RECHAZADA')))
@@ -153,7 +158,7 @@ INSERT INTO `products` VALUES ('skin-09205674e246','AK-47 | Asiimov','AK-47','As
 
 LOCK TABLES `flyway_schema_history` WRITE;
 /*!40000 ALTER TABLE `flyway_schema_history` DISABLE KEYS */;
-INSERT INTO `flyway_schema_history` VALUES (1,'1','schema','SQL','V1__schema.sql',-766530468,'skinmarket','2026-11-21 21:12:16',1554,1),(2,'2','catalog','SQL','V2__catalog.sql',-1090486680,'skinmarket','2026-11-21 21:12:17',57,1),(3,'3','seller applications','SQL','V3__seller_applications.sql',-739060356,'skinmarket','2026-11-25 00:07:58',794,1);
+INSERT INTO `flyway_schema_history` VALUES (1,'1','schema','SQL','V1__schema.sql',-766530468,'skinmarket','2026-11-21 21:12:16',1554,1),(2,'2','catalog','SQL','V2__catalog.sql',-1090486680,'skinmarket','2026-11-21 21:12:17',57,1),(3,'3','seller applications','SQL','V3__seller_applications.sql',-739060356,'skinmarket','2026-11-25 00:07:58',794,1),(4,'4','profiles and seller roles','SQL','V4__profiles_and_seller_roles.sql',247514816,'skinmarket','2026-11-25 01:03:56',847,1);
 /*!40000 ALTER TABLE `flyway_schema_history` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

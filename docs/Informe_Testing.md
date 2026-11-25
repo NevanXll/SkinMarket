@@ -1,17 +1,17 @@
 # Informe de pruebas de SkinMarket
 
-Fecha de ejecución: 24 de noviembre de 2026. Versión 3.1 con postulación a vendedor.
+Fecha de ejecución: 24 de noviembre de 2026. Versión 3.2 con perfil editable y solicitud de rol Vendedor.
 
 ## Pruebas frontend
 
-Comando: `npm test` o `npm run test:coverage`. Herramientas: Jasmine, Karma, Chrome Headless y Testing Library. Resultado: **65 pruebas aprobadas, cero fallos**.
+Comando: `npm test` o `npm run test:coverage`. Herramientas: Jasmine, Karma, Chrome Headless y Testing Library. Resultado: **66 pruebas aprobadas, cero fallos**.
 
 | Métrica | Cubierto | Total | Porcentaje |
 | --- | --- | --- | --- |
-| Líneas | 480 | 550 | 87,27% |
-| Sentencias | 580 | 661 | 87,74% |
-| Funciones | 211 | 261 | 80,84% |
-| Ramas | 523 | 599 | 87,31% |
+| Líneas | 505 | 580 | 87,06% |
+| Sentencias | 609 | 695 | 87,62% |
+| Funciones | 224 | 276 | 81,15% |
+| Ramas | 544 | 623 | 87,31% |
 
 El umbral configurado es 60% en cada métrica. Se incluye código de páginas, componentes, contexto, cliente HTTP y funciones reutilizables. Se excluyen el arranque main.jsx y los datos estáticos. No se redujo el alcance a una única función para alcanzar el porcentaje.
 
@@ -21,7 +21,7 @@ Informe navegable: `coverage/index.html`. Datos: `coverage/coverage-summary.json
 
 ## Backend
 
-Comando con Java 21: `backend/mvnw.cmd -f backend/pom.xml test` en Windows o `./mvnw test` desde backend en Linux. Pasaron **23 pruebas**. Catorce corresponden a autenticación, permisos, aprobación de vendedor y acceso a Swagger, dos a la API de productos y siete a pedidos.
+Comando con Java 21: `backend/mvnw.cmd -f backend/pom.xml test` en Windows o `./mvnw test` desde backend en Linux. Pasaron **24 pruebas**. Quince corresponden a autenticación, permisos, perfil, aprobación de vendedor y acceso a Swagger, dos a la API de productos y siete a pedidos.
 
 Las pruebas de integración Spring usan H2 en modo MySQL únicamente como entorno de prueba aislado. Verifican hash BCrypt sin exposición de contraseña, registro inválido, correo duplicado, renovación rotatoria, cierre, autorización ADMIN, protección de origen/cabecera, bloqueo, límite UTF-8 de contraseña, compra, rollback por saldo y stock, idempotencia y acceso a pedidos ajenos. La aplicación en ejecución utiliza MySQL, no H2.
 
@@ -29,7 +29,7 @@ Resultados detallados: `backend/ms-usuarios/target/surefire-reports` y `backend/
 
 ## API con MySQL
 
-Comando: `python scripts/smoke-api.py`, con Compose activo y `.env` privado. Resultado: **58 comprobaciones HTTP aprobadas**, además de aserciones sobre cuerpos y estado.
+Comando: `python scripts/smoke-api.py`, con Compose activo y `.env` privado. Resultado: **62 comprobaciones HTTP aprobadas**, además de aserciones sobre cuerpos y estado. Se comprobó que los ajustes del perfil se recuperen desde MySQL y que el endpoint preserve el rol de la cuenta.
 
 Se comprobó que el cliente puede postular, consultar el rechazo, reenviar la solicitud y recibir el rol tras la aprobación administrativa. La API impide que un cliente revise solicitudes y que un vendedor acceda al carrito, a la gestión de cuentas o a la edición del catálogo. El vendedor aprobado puede consultar el listado y el detalle de órdenes.
 
@@ -39,11 +39,11 @@ El script crea cuentas y productos QA identificados; se debe ejecutar en una bas
 
 ## Navegador
 
-Se ejecutó `scripts/capture-ui.cjs` con Chrome y Playwright. Se comprobó el registro, la sesión al recargar, la compra, el inventario, la postulación, la aprobación y el detalle de orden como vendedor. El recorrido terminó sin errores JavaScript y el catálogo de 390 × 844 conservó el ancho de pantalla. Las capturas están en `docs/screenshots`.
+Se ejecutó `scripts/capture-ui.cjs` con Chrome y Playwright. Se comprobó el registro, la sesión al recargar, la compra, el inventario, la persistencia del perfil y su privacidad, la solicitud del rol, la aprobación y el detalle de orden como vendedor. El recorrido terminó sin errores JavaScript y el catálogo de 390 × 844 conservó el ancho de pantalla. Las capturas están en `docs/screenshots`.
 
 ## Compilación, contenedores y respaldo
 
-La compilación de React y los tres servicios finalizó correctamente. Compose levantó MySQL 8.4, Spring Boot y Nginx. El respaldo `database/skinmarket.sql` se restauró en un esquema de verificación con 24 productos, cero cuentas, cero solicitudes y tres migraciones Flyway.
+La compilación de React y los tres servicios finalizó correctamente. Compose levantó MySQL 8.4, Spring Boot y Nginx. El respaldo `database/skinmarket.sql` se restauró en un esquema de verificación con 24 productos, cero cuentas, cero solicitudes y cuatro migraciones Flyway.
 
 ## Verificación en AWS
 

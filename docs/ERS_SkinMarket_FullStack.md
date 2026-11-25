@@ -1,6 +1,6 @@
 # Especificación de requisitos de SkinMarket Pro
 
-Versión 3.1 - React, Spring Boot y MySQL. Fecha: 24 de noviembre de 2026.
+Versión 3.2 - React, Spring Boot y MySQL. Fecha: 24 de noviembre de 2026.
 
 ## 1. Introducción
 
