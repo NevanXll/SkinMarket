@@ -13,6 +13,7 @@ async function setup(path = '/', role = null, transform = () => {}) {
 describe('Interfaz React con API simulada', () => {
   it('abre Mi perfil desde el avatar y aplica la privacidad al guardar', async () => {
     const { user, server } = await setup('/productos', 'client');
+    expect(screen.queryByRole('link', { name: 'Ser vendedor' })).toBeNull();
     await user.click(screen.getByRole('link', { name: 'Mi perfil' }));
     expect(screen.getByRole('heading', { name: 'Mi perfil' })).toBeTruthy();
     expect(screen.queryByText(server.current.email)).toBeNull();
@@ -24,7 +25,12 @@ describe('Interfaz React con API simulada', () => {
     await user.type(screen.getByLabelText('Ubicación de perfil (opcional)'), 'Santiago, Chile');
     const canvas = document.createElement('canvas');
     const bitmap = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
-    await user.upload(screen.getByLabelText('Subir foto de perfil'), new File([bitmap], 'avatar.jpg', { type: bitmap.type }));
+    const photoInput = screen.getByLabelText('Subir foto de perfil');
+    expect(photoInput.hidden).toBeTrue();
+    const openPhotoPicker = spyOn(photoInput, 'click').and.callThrough();
+    await user.click(screen.getByRole('button', { name: 'Cambiar foto de perfil' }));
+    expect(openPhotoPicker).toHaveBeenCalled();
+    await user.upload(photoInput, new File([bitmap], 'avatar.jpg', { type: bitmap.type }));
     expect(await screen.findByRole('button', { name: 'Quitar foto' })).toBeTruthy();
     await user.click(screen.getByLabelText('Mostrar mi correo en Mi perfil'));
     await user.click(screen.getByLabelText('Mostrar mi saldo en el encabezado'));
@@ -37,6 +43,8 @@ describe('Interfaz React con API simulada', () => {
     expect(screen.queryByText('Santiago, Chile')).toBeNull();
     expect(screen.getByText(server.current.email)).toBeTruthy();
     expect(screen.getByLabelText('Recargar saldo virtual').querySelector('strong')).toBeNull();
+    await user.click(screen.getByRole('link', { name: 'Ser vendedor' }));
+    expect(await screen.findByRole('heading', { name: 'Solicitar rol Vendedor' })).toBeTruthy();
   });
   it('permite postular y conserva el estado pendiente en pantalla', async () => {
     const { user, server } = await setup('/vender', 'client');
@@ -86,7 +94,20 @@ describe('Interfaz React con API simulada', () => {
   it('agrega, compra y muestra inventario', async () => { const { user } = await setup('/productos', 'client'); await user.click(screen.getAllByRole('button', { name: 'Añadir al carrito' })[0]); await user.click(screen.getByRole('link', { name: /Carrito, 1/ })); await user.click(screen.getByRole('button', { name: /Confirmar compra/ })); expect(await screen.findByRole('heading', { name: /inventario/i })).toBeTruthy(); });
   it('cambia cantidades y elimina líneas', async () => { const { user } = await setup('/carrito', 'client', (s) => { s.cart = [{ productId: s.products[0].id, quantity: 2 }]; }); await user.click(screen.getByLabelText(/^Reducir/)); await waitFor(() => expect(screen.getByRole('link', { name: /Carrito, 1/ })).toBeTruthy()); await user.click(screen.getByLabelText(/^Quitar/)); expect(await screen.findByText('Tu carrito está esperando')).toBeTruthy(); });
   it('muestra restricción de saldo y stock', async () => { await setup('/carrito', 'client', (s) => { s.current.balance = 0; s.cart = [{ productId: s.products[0].id, quantity: 99999 }]; }); expect(screen.getByRole('button', { name: /Confirmar compra/ })).toBeDisabled(); expect(screen.getByText(/Stock insuficiente. Reduce/)).toBeTruthy(); });
-  it('recarga billetera y cambia moneda', async () => { const { user } = await setup('/productos', 'client'); await user.selectOptions(screen.getByLabelText('Moneda'), 'CLP'); await user.click(screen.getByLabelText('Recargar saldo virtual')); const dialog = within(screen.getByRole('dialog')); await user.click(dialog.getByRole('button', { name: 'Añadir saldo virtual' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); });
+  it('muestra montos en ambas monedas y acredita el seleccionado en USD', async () => {
+    const { user, server } = await setup('/productos', 'client');
+    const initial = server.current.balance;
+    await user.selectOptions(screen.getByLabelText('Moneda'), 'CLP');
+    await user.click(screen.getByLabelText('Recargar saldo virtual'));
+    const dialog = within(screen.getByRole('dialog', { name: 'Recargar saldo' }));
+    expect(dialog.getAllByRole('radio').length).toBe(4);
+    const confirm = dialog.getByRole('button', { name: 'Añadir saldo virtual' });
+    expect(confirm).toBeDisabled();
+    await user.click(dialog.getByRole('radio', { name: /475\.000 CLP.*500\.00 USD/ }));
+    await user.click(confirm);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(server.current.balance).toBe(initial + 500);
+  });
   it('muestra compras vacías y 404', async () => { await setup('/compras', 'client'); expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/compras/i); });
   it('muestra página inexistente', async () => { await setup('/inexistente'); expect(screen.getByText('404 · Fuera del mapa')).toBeTruthy(); });
   it('consulta detalle REST por identificador', async () => { const { server } = await setup(); const link = screen.getAllByRole('link').find((a) => a.getAttribute('href')?.includes(`/productos/${server.products[0].id}`)); fireEvent.click(link); expect(await screen.findByRole('heading', { level: 1, name: server.products[0].name })).toBeTruthy(); });

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Camera } from "lucide-react";
+import { Link } from "react-router-dom";
 import ProfileAvatar, { avatarOptions } from "../components/ProfileAvatar";
 import { useMarket } from "../context/MarketContext";
 
@@ -42,6 +44,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [preparingPhoto, setPreparingPhoto] = useState(false);
+  const photoInput = useRef(null);
 
   function change(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -91,7 +94,15 @@ export default function Profile() {
       <form className="profile-settings" onSubmit={submit}>
         <section className="order-card">
           <div className="profile-preview">
-            <ProfileAvatar name={form.name} avatar={form.avatar} photo={form.avatarPhoto} />
+            <button type="button" className="profile-photo-control" aria-label="Cambiar foto de perfil"
+              aria-describedby="profile-photo-help" title="Cambiar foto de perfil"
+              disabled={preparingPhoto || saving} onClick={() => photoInput.current.click()}>
+              <ProfileAvatar name={form.name} avatar={form.avatar} photo={form.avatarPhoto} />
+              <span className="profile-photo-overlay" aria-hidden="true"><Camera size={22} /></span>
+            </button>
+            <input ref={photoInput} type="file" hidden aria-label="Subir foto de perfil" accept="image/jpeg,image/png,image/webp"
+              onChange={updatePhoto} disabled={preparingPhoto || saving} />
+            <span id="profile-photo-help" className="visually-hidden">JPG, PNG o WebP, hasta 5 MB.</span>
             <div>
               <h2>Personalización</h2>
               <p>{user.name}</p>
@@ -102,6 +113,8 @@ export default function Profile() {
                   dateStyle: "long", timeZone: "UTC",
                 }).format(new Date(user.birthDate + "T00:00:00Z"))}</time>
               </p>}
+              {form.avatarPhoto && <button type="button" className="text-button profile-remove-photo"
+                onClick={() => change("avatarPhoto", "")}>Quitar foto</button>}
             </div>
           </div>
           <div className="profile-fields">
@@ -118,12 +131,6 @@ export default function Profile() {
             <label htmlFor="profile-location">Ubicación de perfil (opcional)</label>
             <input id="profile-location" className="form-control" value={form.location}
               onChange={(e) => change("location", e.target.value)} placeholder="Ej. Santiago, Chile" maxLength={120} />
-            <label htmlFor="profile-photo">Subir foto de perfil</label>
-            <input id="profile-photo" type="file" className="form-control" accept="image/jpeg,image/png,image/webp"
-              onChange={updatePhoto} disabled={preparingPhoto || saving} aria-describedby="profile-photo-help" />
-            <small id="profile-photo-help" className="muted">JPG, PNG o WebP, hasta 5 MB. La foto se recorta al centro.</small>
-            {form.avatarPhoto && <button type="button" className="button secondary"
-              onClick={() => change("avatarPhoto", "")}>Quitar foto</button>}
             <fieldset>
               <legend>Avatar</legend>
               <div className="avatar-options">
@@ -156,6 +163,13 @@ export default function Profile() {
         {error && <p className="field-error" role="alert">{error}</p>}
         <button className="button" disabled={saving || preparingPhoto}>{saving ? "Guardando…" : "Guardar cambios"}</button>
       </form>
+      {user.role === "client" && (
+        <section className="order-card profile-seller">
+          <h2>Ser vendedor</h2>
+          <p>Solicita el rol Vendedor o consulta el estado de tu solicitud.</p>
+          <Link className="button secondary" to="/vender">Ser vendedor</Link>
+        </section>
+      )}
     </div>
   );
 }

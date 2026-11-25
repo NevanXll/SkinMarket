@@ -353,6 +353,45 @@ a svg {
 }
 .profile-preview p { margin-bottom: 0; overflow-wrap: anywhere; }
 .profile-preview .avatar { width: 60px; height: 60px; font-size: 24px; flex: none; }
+.profile-photo-control {
+  position: relative;
+  display: grid;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: white;
+}
+.profile-photo-control:focus-visible {
+  outline: 2px solid var(--bright);
+  outline-offset: 3px;
+}
+.profile-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: #090d16b8;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.profile-photo-control:hover .profile-photo-overlay,
+.profile-photo-control:focus-visible .profile-photo-overlay { opacity: 1; }
+.profile-photo-control:disabled { cursor: wait; }
+.profile-remove-photo { margin-top: 6px; }
+.profile-seller { max-width: 720px; margin-top: 22px; }
+@media (hover: none) {
+  .profile-photo-overlay {
+    inset: auto 0 0 auto;
+    width: 24px;
+    height: 24px;
+    background: #381c63;
+    opacity: 1;
+  }
+  .profile-photo-overlay svg { width: 14px; height: 14px; }
+}
 .profile-fields { display: grid; gap: 10px; }
 .profile-fields legend { font-size: 1rem; }
 .profile-fields > button { justify-self: start; }
@@ -1478,6 +1517,32 @@ td {
 .market-modal .check-label {
   flex-direction: row;
   align-items: center;
+}
+.wallet-modal .wallet-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.wallet-options legend { font-size: 12px; margin-bottom: 9px; }
+.wallet-modal .wallet-option {
+  flex-direction: row;
+  align-items: center;
+  min-height: 64px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.wallet-option:has(input:checked) {
+  border-color: var(--bright);
+  background: #24193e;
+}
+.wallet-option input { flex: none; accent-color: var(--bright); }
+.wallet-option strong, .wallet-option small { display: block; }
+.wallet-option strong { color: #f0f0f7; font-size: 14px; }
+.wallet-option small { margin-top: 4px; color: var(--muted); }
+@media (max-width: 380px) {
+  .wallet-modal .wallet-options { grid-template-columns: 1fr; }
 }
 .form-row {
   display: grid;

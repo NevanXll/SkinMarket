@@ -11,16 +11,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useMarket } from "../context/MarketContext";
-import { money, USD_TO_CLP } from "../lib/market";
-import Modal from "./Modal";
+import { money } from "../lib/market";
+import WalletTopUp from "./WalletTopUp";
 import ProfileAvatar from "./ProfileAvatar";
 export default function Layout({ children }) {
   const { state, user, notice, serviceError, loading, retry, setCurrency, logout, topUp } =
     useMarket();
   const [menu, setMenu] = useState(false);
   const [wallet, setWallet] = useState(false);
-  const [amount, setAmount] = useState("1000");
-  const [error, setError] = useState("");
   const seller = user?.role === "seller";
   return (
     <>
@@ -52,7 +50,6 @@ export default function Layout({ children }) {
             <NavLink to="/productos">Mercado</NavLink>
             <NavLink to="/inventario">Inventario</NavLink>
             <NavLink to="/compras">Mis compras</NavLink>
-            {user?.role === "client" && <NavLink to="/vender">Ser vendedor</NavLink>}
           </>}
           {user?.role === "admin" && (
             <NavLink to="/admin">Administración</NavLink>
@@ -81,10 +78,7 @@ export default function Layout({ children }) {
             <button
               className="wallet-button"
               aria-label="Recargar saldo virtual"
-              onClick={() => {
-                setWallet(true);
-                setError("");
-              }}
+              onClick={() => setWallet(true)}
             >
               <Wallet size={16} />
               {user.showHeaderBalance !== false && <strong>{money(user.balance, state.currency)}</strong>}
@@ -161,66 +155,8 @@ export default function Layout({ children }) {
           {notice.text}
         </div>
       )}
-      {wallet && !seller && (
-        <Modal onClose={() => setWallet(false)}>
-          <section
-            className="market-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="wallet-title"
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setWallet(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="icon-button modal-close"
-              aria-label="Cerrar recarga"
-              onClick={() => setWallet(false)}
-            >
-              <X />
-            </button>
-            <span className="eyebrow">BILLETERA DE PRUEBA</span>
-            <h2 id="wallet-title">Más saldo. Más posibilidades.</h2>
-            <p>
-              Recarga virtual, sin pagos reales. 1 USD = {USD_TO_CLP} CLP (tasa
-              de demostración).
-            </p>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  await topUp(
-                    Number(amount) /
-                      (state.currency === "CLP" ? USD_TO_CLP : 1),
-                  );
-                  setWallet(false);
-                } catch (e) {
-                  setError(e.message);
-                }
-              }}
-            >
-              <label>
-                Monto en {state.currency}
-                <input
-                  autoFocus
-                  type="number"
-                  step={state.currency === "CLP" ? "1" : "0.01"}
-                  min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
-              </label>
-              {error && (
-                <p className="field-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button className="button">Añadir saldo virtual</button>
-            </form>
-          </section>
-        </Modal>
+      {wallet && user && !seller && (
+        <WalletTopUp currency={state.currency} topUp={topUp} onClose={() => setWallet(false)} />
       )}
     </>
   );

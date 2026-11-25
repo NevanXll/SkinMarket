@@ -31,6 +31,12 @@ const assert = require('node:assert/strict');
     await page.getByRole('heading', { name: /Encuentra tu próxima/ }).waitFor();
     await page.reload();
     await page.getByLabel('Cerrar sesión', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Recargar saldo virtual' }).click();
+    const wallet = page.getByRole('dialog', { name: 'Recargar saldo' });
+    await wallet.getByRole('radio').first().check();
+    await shot('12-recarga');
+    await wallet.getByRole('button', { name: 'Añadir saldo virtual' }).click();
+    await wallet.waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Añadir al carrito', exact: true }).first().click();
     await page.getByRole('link', { name: /Carrito, 1/ }).click();
     await page.getByRole('button', { name: /Confirmar compra/ }).waitFor();
@@ -57,7 +63,11 @@ const assert = require('node:assert/strict');
       ctx.fillText('SM', 32, 32);
       return canvas.toDataURL('image/png').split(',')[1];
     });
-    await page.getByLabel('Subir foto de perfil').setInputFiles({
+    const photoButton = page.getByRole('button', {name: 'Cambiar foto de perfil'});
+    await photoButton.hover();
+    const picker = page.waitForEvent('filechooser');
+    await photoButton.click();
+    await (await picker).setFiles({
       name: 'avatar-demo.png', mimeType: 'image/png', buffer: Buffer.from(demoPhoto, 'base64'),
     });
     await page.getByRole('button', {name: 'Quitar foto'}).waitFor();

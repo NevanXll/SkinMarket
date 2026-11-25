@@ -62,7 +62,7 @@ Nota. El administrador consulta y gestiona el estado de las cuentas.
 
 ## Postular a vendedor
 
-Con una cuenta de cliente, selecciona **Ser vendedor**. Explica por qué quieres obtener el rol e indica si estudias, país, estado o región y ciudad. Añade experiencia, institución educativa o código postal si corresponde. Selecciona **Enviar solicitud**. Vuelve a la misma vista y selecciona **Actualizar estado** para consultar la decisión.
+Con una cuenta de cliente, abre **Mi perfil** desde el avatar del encabezado y selecciona **Ser vendedor**. Explica por qué quieres obtener el rol e indica si estudias, país, estado o región y ciudad. Añade experiencia, institución educativa o código postal si corresponde. Selecciona **Enviar solicitud**. Vuelve a la misma vista y selecciona **Actualizar estado** para consultar la decisión.
 
 **Figura 7. Formulario de postulación**
 
@@ -98,13 +98,23 @@ Nota. Abre el menú y los filtros desde la barra superior.
 
 ## Mi perfil
 
-Selecciona el avatar del encabezado. Puedes subir una foto JPG, PNG o WebP de hasta 5 MB o elegir un avatar prediseñado. Edita tu nombre visible y biografía y, si quieres, añade fecha de nacimiento y ubicación. En Privacidad en pantalla puedes mostrar u ocultar el correo, la fecha y la ubicación en el resumen y el nombre y saldo en el encabezado. Selecciona **Guardar cambios** para conservar los ajustes.
+Selecciona el avatar del encabezado para abrir Mi perfil. Pasa el mouse sobre el avatar de la sección Personalización o tócalo en el móvil para elegir una foto JPG, PNG o WebP de hasta 5 MB. También puedes elegir un avatar prediseñado. Edita tu nombre, biografía, fecha de nacimiento o ubicación y ajusta su visibilidad en pantalla. Selecciona **Guardar cambios** para conservar los ajustes.
 
 **Figura 11. Personalización y privacidad**
 
 ![Mi perfil](screenshots/11-perfil.png)
 
 Nota. Las preferencias se mantienen al volver a abrir la sesión.
+
+## Recargar la billetera
+
+Pulsa el botón de saldo en el encabezado. Elige una recarga de 500, 1.000, 2.500 o 5.000 USD virtuales. El modal muestra cada monto en la moneda seleccionada y su equivalente. Pulsa **Añadir saldo virtual** para acreditar la recarga.
+
+**Figura 12. Opciones de recarga**
+
+![Opciones de recarga](screenshots/12-recarga.png)
+
+Nota. El precio equivalente se calcula con la tasa fija en USD y CLP. Las recargas se realizan con saldo simulado.
 
 ## Alcance
 
