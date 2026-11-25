@@ -10,6 +10,18 @@ Abre la dirección publicada o http://localhost:8080 en el equipo donde se ejecu
 
 Nota. Desde la portada se puede explorar el mercado y abrir el detalle de una skin.
 
+### Cuentas de demostración local
+
+Desde la raíz del repositorio completo, con Docker en ejecución, ejecuta `python scripts/demo-local.py`. Al arrancar la tienda se crean las tres cuentas en una base local. Abre http://127.0.0.1:8088 y selecciona **Acceder**.
+
+| Correo | Rol | Contraseña de demostración |
+| --- | --- | --- |
+| cliente.demo@skinmarket.example | Cliente | DemoCliente!2026 |
+| vendedor.demo@skinmarket.example | Vendedor | DemoVendedor!2026 |
+| admin.demo@skinmarket.example | Administrador | DemoAdmin!2026 |
+
+El vendedor empieza con una skin comprada. Para elegirla, abre **Publicaciones** en el panel de vendedor y pulsa **Publicar skin**.
+
 ## Registro e inicio de sesión
 
 Seleccionar Acceder y Crear cuenta. Ingresar nombre de al menos tres caracteres, correo válido y contraseña de al menos seis caracteres, con máximo 72 bytes UTF-8. Los errores aparecen junto al campo. El servidor también revisa correo único. Al registrar, la cuenta recibe 12.500 USD virtuales y entra como CLIENTE. Para volver, usar correo y contraseña en Iniciar sesión.
