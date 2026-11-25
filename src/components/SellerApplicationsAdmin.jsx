@@ -42,8 +42,8 @@ export default function SellerApplicationsAdmin() {
         <article className="order-card text-break" key={application.userId}>
           <h2>{application.name}</h2>
           <p>{application.email}</p>
-          <p><strong>Skins:</strong> {application.skins}</p>
           <p><strong>Motivo:</strong> {application.reason}</p>
+          {application.experience && <p><strong>Experiencia:</strong> {application.experience}</p>}
           <p>Estado: {{ PENDIENTE: "En revisión", APROBADA: "Aprobada", RECHAZADA: "Rechazada" }[application.status]}</p>
           {application.reviewNote && <p>Comentario: {application.reviewNote}</p>}
           {application.status === "PENDIENTE" && (

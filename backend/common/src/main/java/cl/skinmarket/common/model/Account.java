@@ -9,6 +9,10 @@ public class Account {
  @Column(name="password_hash",nullable=false) public String passwordHash;
  @Column(nullable=false) public String role = "CLIENTE";
  @Column(nullable=false) public boolean blocked;
+ @Column(nullable=false,length=20) public String avatar = "initial";
+ @Column(nullable=false,length=240) public String bio = "";
+ @Column(name="show_email",nullable=false) public boolean showEmail;
+ @Column(name="show_header_balance",nullable=false) public boolean showHeaderBalance = true;
  @Column(nullable=false,precision=19,scale=2) public BigDecimal balance = new BigDecimal("12500.00");
  @Column(name="auth_version",nullable=false) public long authVersion;
  @Version public long version;

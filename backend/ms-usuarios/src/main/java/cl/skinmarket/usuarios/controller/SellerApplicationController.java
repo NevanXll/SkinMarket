@@ -33,7 +33,7 @@ public class SellerApplicationController {
     @PreAuthorize("hasRole('CLIENTE')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApplicationView submit(Principal principal, @Valid @RequestBody ApplicationInput input) {
-        return applications.submit(principal.getName(), input.skins(), input.reason());
+        return applications.submit(principal.getName(), input.reason(), input.experience());
     }
 
     @GetMapping("/admin/seller-applications")
@@ -48,7 +48,7 @@ public class SellerApplicationController {
         return applications.review(userId, input.approved(), input.note());
     }
 
-    public record ApplicationInput(@NotBlank @Size(min = 3, max = 500) String skins,
-                                   @NotBlank @Size(min = 10, max = 1000) String reason) {}
+    public record ApplicationInput(@NotBlank @Size(min = 10, max = 1000) String reason,
+                                   @Size(max = 500) String experience) {}
     public record ReviewInput(@NotNull Boolean approved, @Size(max = 500) String note) {}
 }

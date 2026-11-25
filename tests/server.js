@@ -16,6 +16,10 @@ export function mockServer(role = null) {
     if(path === '/auth/login') { if(body.password !== 'Correct123') return reply({ message: 'Credenciales incorrectas' }, 401); server.current = server.accounts.find((a) => a.email === body.email) || client; return reply({ accessToken: 'test-token', user: server.current }); }
     if(path === '/auth/register') { server.current = { ...client, ...body, id: 'registered' }; delete server.current.password; server.accounts.push(server.current); return reply({ accessToken: 'test-token', user: server.current }, 201); }
     if(path === '/me') return reply(server.current);
+    if(path === '/me/profile' && method === 'PUT') {
+      Object.assign(server.current, body);
+      return reply(server.current);
+    }
     if(path === '/seller-application') {
       if (method === 'GET') {
         const application = server.applications.find((a) => a.userId === server.current.id);

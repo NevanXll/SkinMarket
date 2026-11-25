@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useMarket } from "../context/MarketContext";
 import { money, USD_TO_CLP } from "../lib/market";
 import Modal from "./Modal";
+import ProfileAvatar from "./ProfileAvatar";
 export default function Layout({ children }) {
   const { state, user, notice, serviceError, loading, retry, setCurrency, logout, topUp } =
     useMarket();
@@ -51,7 +52,7 @@ export default function Layout({ children }) {
             <NavLink to="/productos">Mercado</NavLink>
             <NavLink to="/inventario">Inventario</NavLink>
             <NavLink to="/compras">Mis compras</NavLink>
-            {user?.role === "client" && <NavLink to="/vender">Vender skins</NavLink>}
+            {user?.role === "client" && <NavLink to="/vender">Ser vendedor</NavLink>}
           </>}
           {user?.role === "admin" && (
             <NavLink to="/admin">Administración</NavLink>
@@ -86,7 +87,7 @@ export default function Layout({ children }) {
               }}
             >
               <Wallet size={16} />
-              <strong>{money(user.balance, state.currency)}</strong>
+              {user.showHeaderBalance !== false && <strong>{money(user.balance, state.currency)}</strong>}
               <span>
                 <Plus size={17} />
               </span>
@@ -102,7 +103,9 @@ export default function Layout({ children }) {
           </NavLink>}
           {user ? (
             <div className="profile">
-              <span className="avatar">{user.name[0]}</span>
+              <NavLink to="/perfil" className="profile-link" aria-label="Mi perfil">
+                <ProfileAvatar name={user.name} avatar={user.avatar} />
+              </NavLink>
               <span>
                 {user.name}
                 <small>

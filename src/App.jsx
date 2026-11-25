@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import SellerApplication from "./pages/SellerApplication";
 import SellerPanel from "./pages/SellerPanel";
+import Profile from "./pages/Profile";
 function Protected({ children, admin = false, allowed = ["client", "admin"] }) {
   const { user, loading } = useMarket();
   if (loading) return <p role="status">Restaurando sesión…</p>;
@@ -50,6 +51,9 @@ export default function App() {
           <Protected allowed={["seller"]}><SellerPanel orderDetail /></Protected>
         } />
         <Route path="/login" element={<Navigate to="/acceso" replace />} />
+        <Route path="/perfil" element={
+          <Protected allowed={["client", "admin", "seller"]}><Profile key={user?.id} /></Protected>
+        } />
         <Route
           path="/carrito"
           element={

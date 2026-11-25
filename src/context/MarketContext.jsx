@@ -67,6 +67,7 @@ export function MarketProvider({ children }) {
     state, user: state.users.find((u) => u.id === state.sessionId) || null,
     notice, loading, serviceError, retry: initialize, refreshAccount: () => synchronize(true), notify,
     login: (v) => authenticate(v), register: (v) => authenticate(v, true),
+    saveProfile: (profile) => mutate(() => api('/me/profile', { method: 'PUT', body: profile }), 'Perfil actualizado.'),
     logout: async () => {
       try { await api('/auth/logout', { method: 'POST' }); }
       catch (e) { notify(e.message, 'error'); return; }

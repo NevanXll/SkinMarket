@@ -74,9 +74,11 @@ RF-11 Dashboard. ADMIN consulta ventas totales, cantidad de pedidos, unidades, t
 
 RF-12 Errores y persistencia. Toda operación confirmada permanece tras recargar o reiniciar servicios conservando el volumen MySQL. La interfaz informa éxito, validación, falta de permisos, conflicto o desconexión. No almacena contraseñas, JWT de acceso ni bases de usuarios en localStorage.
 
-RF-13 Postulación a vendedor. Un CLIENTE autenticado describe las skins y el motivo de su solicitud. El servidor persiste una solicitud activa por cliente. ADMIN decide aprobar o rechazar e indica el motivo del rechazo. La aprobación guarda la decisión y asigna VENDEDOR en una transacción. Un rechazo permite un nuevo envío.
+RF-13 Solicitud del rol Vendedor. Un CLIENTE autenticado indica su motivo y puede añadir experiencia o contexto. El servidor persiste una solicitud activa por cliente. ADMIN decide aprobar o rechazar e indica el motivo del rechazo. La aprobación guarda la decisión y asigna VENDEDOR en una transacción. Un rechazo permite un nuevo envío.
 
 RF-14 Panel de vendedor. El vendedor puede listar productos, consultar su detalle, listar órdenes y consultar su detalle. Las operaciones de compra y de administración se restringen en la interfaz y en el servidor.
+
+RF-15 Perfil. Cada cuenta autenticada puede cambiar su nombre visible, avatar y biografía. El sistema conserva en MySQL las preferencias para mostrar el correo en el perfil y el saldo en el encabezado. Editar el perfil mantiene el rol de la cuenta.
 
 ### 3.3 Diseño lógico de datos
 
@@ -108,7 +110,7 @@ CU-04 Administrar cuenta. Actor: ADMIN. Flujo: abre Usuarios, busca, crea o edit
 
 CU-05 Recuperar sesión. Actor: usuario que recarga. Precondición: cookie válida. Flujo: React solicita refresh, servidor verifica hash/vencimiento/versión y rota cookie, React carga perfil, carrito e historial. Alternativa: sesión inválida lleva a acceso sin exponer datos privados.
 
-CU-06 Postular a vendedor. El cliente abre Vender skins, completa el formulario y lo envía. El administrador abre Solicitudes de vendedor y registra su decisión. El cliente actualiza el estado. Una aprobación habilita el panel de productos y órdenes. Un rechazo muestra el comentario y permite enviar otra solicitud.
+CU-06 Solicitar rol Vendedor. El cliente abre Ser vendedor, completa el formulario y lo envía. El administrador abre Solicitudes de vendedor y registra su decisión. El cliente actualiza el estado. Una aprobación habilita el panel de productos y órdenes. Un rechazo muestra el comentario y permite enviar otra solicitud.
 
 ## Anexo B Trazabilidad de evaluación
 

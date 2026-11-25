@@ -19,6 +19,8 @@ save_token = 'if (pm.response.code < 300) pm.environment.set("access_token", pm.
 add('1 Autenticación', 'Registrar CLIENTE', 'POST', '/auth/register', 201, {'name': 'Cliente Postman', 'email': '{{client_email}}', 'password': '{{client_password}}'}, False, save_token)
 add('1 Autenticación', 'Login CLIENTE', 'POST', '/auth/login', body={'email': '{{client_email}}', 'password': '{{client_password}}'}, auth=False, save=save_token)
 add('1 Autenticación', 'Mi perfil', 'GET', '/me')
+add('1 Autenticación', 'Actualizar mi perfil', 'PUT', '/me/profile',
+    body={'name': 'Cliente Postman', 'avatar': 'shield', 'bio': 'Coleccionista', 'showEmail': False, 'showHeaderBalance': True})
 add('1 Autenticación', 'Renovar por cookie', 'POST', '/auth/refresh', auth=False, save=save_token)
 add('1 Autenticación', 'Logout', 'POST', '/auth/logout', 204, auth=False)
 add('2 Catálogo', 'Listar catálogo', 'GET', '/products', auth=False, save='if (pm.response.code === 200 && pm.response.json().length) pm.environment.set("product_id", pm.response.json()[0].id);')
@@ -50,7 +52,7 @@ add('5 Validaciones', 'Cantidad negativa', 'PUT', '/cart/{{product_id}}', 400, {
 add('5 Validaciones', 'Recarga negativa', 'POST', '/wallet/top-up', 400, {'amount': -1})
 add('5 Validaciones', 'Endpoint sin token', 'GET', '/admin/users', 401, auth=False)
 add('6 Vendedor', 'Enviar solicitud como cliente', 'POST', '/seller-application', 201,
-    {'skins': 'AK | Asiimov', 'reason': 'Quiero vender skins de mi colección.'},
+    {'reason': 'Quiero obtener acceso al panel de vendedor.'},
     save='if (pm.response.code === 201) pm.environment.set("applicant_id", pm.response.json().userId);')
 add('6 Vendedor', 'Consultar mi solicitud', 'GET', '/seller-application')
 add('6 Vendedor', 'Login ADMIN', 'POST', '/auth/login',

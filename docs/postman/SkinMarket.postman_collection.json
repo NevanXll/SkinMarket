@@ -117,6 +117,47 @@
           ]
         },
         {
+          "name": "Actualizar mi perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "SkinMarket"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/me/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Postman\",\n  \"avatar\": \"shield\",\n  \"bio\": \"Coleccionista\",\n  \"showEmail\": false,\n  \"showHeaderBalance\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Renovar por cookie",
           "request": {
             "method": "POST",
@@ -1219,7 +1260,7 @@
             "url": "{{base_url}}/seller-application",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"skins\": \"AK | Asiimov\",\n  \"reason\": \"Quiero vender skins de mi colección.\"\n}",
+              "raw": "{\n  \"reason\": \"Quiero obtener acceso al panel de vendedor.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

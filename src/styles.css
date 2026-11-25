@@ -324,6 +324,52 @@ a svg {
   color: white;
   border: 2px solid #655078;
 }
+.profile-link {
+  display: inline-grid;
+  flex: none;
+  padding: 4px;
+  border-radius: 50%;
+}
+.profile-link:focus-visible {
+  outline: 2px solid var(--bright);
+  outline-offset: 2px;
+}
+.avatar-crosshair { background: #54288d; }
+.avatar-shield { background: #26536c; }
+.avatar-star { background: #67441c; }
+.profile-settings {
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
+}
+.profile-settings > button { justify-self: start; }
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.profile-preview p { margin-bottom: 0; overflow-wrap: anywhere; }
+.profile-preview .avatar { width: 60px; height: 60px; font-size: 24px; flex: none; }
+.profile-fields { display: grid; gap: 10px; }
+.profile-fields legend { font-size: 1rem; }
+.avatar-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+}
+.avatar-options label:has(input:checked) { border-color: var(--bright); }
+.profile-settings input[type="radio"],
+.profile-settings input[type="checkbox"] { accent-color: var(--bright); }
+.profile-privacy { display: grid; gap: 10px; }
+.profile-privacy label { display: flex; align-items: baseline; gap: 9px; }
+.profile-privacy p { margin-bottom: 0; }
 .mobile-menu {
   display: none;
 }

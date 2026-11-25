@@ -11,8 +11,8 @@ import java.time.Instant;
 public class SellerApplication {
     @Id @Column(name = "user_id", length = 64)
     public String userId;
-    @Column(nullable = false, length = 500)
-    public String skins;
+    @Column(length = 500)
+    public String experience;
     @Column(nullable = false, length = 1000)
     public String reason;
     @Column(nullable = false, length = 16)

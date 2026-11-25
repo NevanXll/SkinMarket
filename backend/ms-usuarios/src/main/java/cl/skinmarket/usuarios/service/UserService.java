@@ -3,6 +3,7 @@ import cl.skinmarket.common.dto.*;
 import cl.skinmarket.common.model.Account;
 import cl.skinmarket.common.repository.*;
 import cl.skinmarket.common.exception.ApiException;
+import cl.skinmarket.usuarios.dto.ProfileInput;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,21 @@ public class UserService {
  public UserService(AccountRepository a,RefreshRepository s,PasswordEncoder p){accounts=a;sessions=s;passwords=p;}
  public List<Map<String,Object>> list(){return accounts.findAll().stream().map(Views::user).toList();}
  public Map<String,Object> get(String id){return Views.user(accounts.findById(id).orElseThrow(ApiException::missing));}
+ public Map<String,Object> profile(String id) {
+  return Views.profile(accounts.findById(id).orElseThrow(ApiException::missing));
+ }
+ @Transactional public Map<String,Object> updateProfile(String id,ProfileInput input) {
+  var a=accounts.lockById(id).orElseThrow(ApiException::missing);
+  if(a.blocked)throw ApiException.denied();
+  String name=input.name().strip();
+  if(name.length()<3)throw new ApiException(HttpStatus.BAD_REQUEST,"El nombre debe tener al menos 3 caracteres.");
+  a.name=name;
+  a.avatar=input.avatar();
+  a.bio=input.bio().strip();
+  a.showEmail=input.showEmail();
+  a.showHeaderBalance=input.showHeaderBalance();
+  return Views.profile(a);
+ }
  @Transactional public Map<String,Object> create(Requests.UserInput r){
   if("VENDEDOR".equals(r.role()))throw ApiException.conflict("El rol Vendedor se asigna al aprobar una solicitud.");
   AuthService.checkPassword(r.password());validate(r,null);

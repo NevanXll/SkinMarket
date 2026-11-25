@@ -62,13 +62,13 @@ Nota. El administrador consulta y gestiona el estado de las cuentas.
 
 ## Postular a vendedor
 
-Con una cuenta de cliente, selecciona **Vender skins**, describe las skins que quieres vender y explica tu motivo. Selecciona **Enviar solicitud**. La página muestra el estado En revisión. Vuelve a la misma vista y selecciona **Actualizar estado** para consultar la decisión.
+Con una cuenta de cliente, selecciona **Ser vendedor**. Explica por qué quieres obtener el rol y, si quieres, añade tu experiencia o contexto. Selecciona **Enviar solicitud**. La página muestra el estado En revisión. Vuelve a la misma vista y selecciona **Actualizar estado** para consultar la decisión.
 
 **Figura 7. Formulario de postulación**
 
 ![Formulario de postulación](screenshots/08-postulacion.png)
 
-Nota. El cliente indica qué skins quiere vender y el motivo de su solicitud.
+Nota. El formulario reúne el motivo de la solicitud y un campo opcional de experiencia.
 
 Con una cuenta ADMIN, abre **Administración → Solicitudes de vendedor**. Revisa los datos y selecciona **Aprobar** o **Rechazar**. Si rechazas, indica el motivo. El cliente puede leerlo y volver a postular.
 
@@ -95,6 +95,16 @@ En móvil, abrir el menú superior y usar Filtros para desplegar las opciones. L
 ![Catálogo móvil](screenshots/07-movil.png)
 
 Nota. Abre el menú y los filtros desde la barra superior.
+
+## Mi perfil
+
+Selecciona el avatar del encabezado. Puedes editar tu nombre visible y biografía, elegir un avatar y decidir si se muestran tu correo en el perfil y tu saldo en el encabezado. Selecciona **Guardar cambios** para conservar los ajustes en tu cuenta.
+
+**Figura 11. Personalización y privacidad**
+
+![Mi perfil](screenshots/11-perfil.png)
+
+Nota. Las preferencias se mantienen al volver a abrir la sesión.
 
 ## Alcance
 

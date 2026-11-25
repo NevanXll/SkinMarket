@@ -47,6 +47,13 @@ for n in range(2):
     assert result['user']['role'] == 'CLIENTE' and 'password' not in result['user']
     clients.append(client)
 client = clients[0]
+profile = {'name': 'QA Perfil', 'avatar': 'shield', 'bio': 'Prueba de persistencia',
+           'showEmail': False, 'showHeaderBalance': False}
+anonymous.call('PUT', '/me/profile', profile, 401)
+client.call('PUT', '/me/profile', {**profile, 'avatar': 'invalid'}, 400)
+client.call('PUT', '/me/profile', {**profile, 'role': 'ADMIN'})
+stored = client.call('GET', '/me')
+assert stored['role'] == 'CLIENTE' and all(stored[key] == value for key, value in profile.items())
 client.call('GET', '/admin/users', expected=403)
 client.call('POST', '/auth/register', {'name': 'QA Cliente', 'email': f'qa-{suffix}-0@example.com', 'password': password}, 409)
 client.call('POST', '/auth/login', {'email': f'qa-{suffix}-0@example.com', 'password': 'incorrecta'}, 401)
@@ -94,9 +101,9 @@ admin.call('DELETE', '/admin/users/' + user['id'], expected=204)
 admin.call('GET', '/admin/users/' + user['id'], expected=404)
 loser.call('GET', '/seller/orders', expected=403)
 loser.call('GET', '/seller-application', expected=204)
-form = {'skins': 'AK | Asiimov', 'reason': 'Quiero vender skins de mi colección.'}
+form = {'reason': 'Quiero obtener acceso al panel de vendedor.'}
 application = loser.call('POST', '/seller-application', form, 201)
-assert application['status'] == 'PENDIENTE'
+assert application['status'] == 'PENDIENTE' and 'skins' not in application
 review = '/admin/seller-applications/' + application['userId']
 loser.call('PUT', review, {'approved': True}, 403)
 admin.call('GET', '/admin/seller-applications')

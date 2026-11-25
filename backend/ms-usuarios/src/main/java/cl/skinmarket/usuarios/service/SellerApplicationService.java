@@ -30,7 +30,7 @@ public class SellerApplicationService {
     }
 
     @Transactional
-    public ApplicationView submit(String userId, String skins, String reason) {
+    public ApplicationView submit(String userId, String reason, String experience) {
         var account = accounts.lockById(userId).orElseThrow(ApiException::missing);
         if (account.blocked || !"CLIENTE".equals(account.role)) {
             throw ApiException.denied();
@@ -39,12 +39,12 @@ public class SellerApplicationService {
         if ("PENDIENTE".equals(application.status)) {
             throw ApiException.conflict("Tu solicitud ya está en revisión.");
         }
-        if (skins.strip().length() < 3 || reason.strip().length() < 10) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Describe las skins y el motivo de tu solicitud.");
+        if (reason.strip().length() < 10) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Indica el motivo de tu solicitud de rol Vendedor.");
         }
         application.userId = userId;
-        application.skins = skins.strip();
         application.reason = reason.strip();
+        application.experience = experience == null || experience.isBlank() ? null : experience.strip();
         application.status = "PENDIENTE";
         application.submittedAt = Instant.now();
         application.reviewedAt = null;
@@ -85,11 +85,11 @@ public class SellerApplicationService {
     }
 
     private ApplicationView view(SellerApplication application, Account account) {
-        return new ApplicationView(account.id, account.name, account.email, application.skins,
-                application.reason, application.status, application.submittedAt, application.reviewedAt,
+        return new ApplicationView(account.id, account.name, account.email, application.reason,
+                application.experience, application.status, application.submittedAt, application.reviewedAt,
                 application.reviewNote);
     }
 
-    public record ApplicationView(String userId, String name, String email, String skins, String reason,
+    public record ApplicationView(String userId, String name, String email, String reason, String experience,
                                   String status, Instant submittedAt, Instant reviewedAt, String reviewNote) {}
 }

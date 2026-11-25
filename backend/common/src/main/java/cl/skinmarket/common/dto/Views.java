@@ -5,5 +5,13 @@ public final class Views {
  public static Map<String,Object> user(Account a) {
   return Map.of("id",a.id,"name",a.name,"email",a.email,"role",a.role,"blocked",a.blocked,"balance",a.balance);
  }
+ public static Map<String,Object> profile(Account a) {
+  var view = new LinkedHashMap<>(user(a));
+  view.put("avatar", a.avatar);
+  view.put("bio", a.bio);
+  view.put("showEmail", a.showEmail);
+  view.put("showHeaderBalance", a.showHeaderBalance);
+  return view;
+ }
  public static Map<String,Object> cart(CartItem c) { return Map.of("productId",c.productId,"quantity",c.quantity); }
 }

@@ -7,7 +7,7 @@ export default function SellerApplication() {
   const { user, refreshAccount } = useMarket();
   const navigate = useNavigate();
   const [application, setApplication] = useState(undefined);
-  const [skins, setSkins] = useState("");
+  const [experience, setExperience] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +29,7 @@ export default function SellerApplication() {
     try {
       setApplication(await api("/seller-application", {
         method: "POST",
-        body: { skins: skins.trim(), reason: reason.trim() },
+        body: { reason: reason.trim(), experience: experience.trim() },
       }));
     } catch (failure) {
       setError(failure.message);
@@ -59,8 +59,8 @@ export default function SellerApplication() {
   return (
     <div className="page-container">
       <div className="page-heading">
-        <h1>Postulación a vendedor</h1>
-        <p>Indica qué skins tienes y por qué quieres venderlas. Un administrador revisará tu solicitud.</p>
+        <h1>Solicitar rol Vendedor</h1>
+        <p>Cuéntanos por qué quieres obtener este rol. Un administrador revisará tu postulación.</p>
       </div>
       {error && <p className="field-error" role="alert">{error}</p>}
       {application === undefined && !error && <p role="status">Consultando solicitud…</p>}
@@ -74,12 +74,12 @@ export default function SellerApplication() {
       {(application === null || status === "RECHAZADA") && (
         <form className="order-card" onSubmit={submit}>
           <label className="d-block mb-3">
-            Skins que quieres vender
-            <textarea className="form-control" value={skins} onChange={(e) => setSkins(e.target.value)} minLength={3} maxLength={500} required />
+            Motivo para solicitar el rol
+            <textarea className="form-control" value={reason} onChange={(e) => setReason(e.target.value)} minLength={10} maxLength={1000} required />
           </label>
           <label className="d-block mb-3">
-            Motivo de la solicitud
-            <textarea className="form-control" value={reason} onChange={(e) => setReason(e.target.value)} minLength={10} maxLength={1000} required />
+            Experiencia o contexto (opcional)
+            <textarea className="form-control" value={experience} onChange={(e) => setExperience(e.target.value)} maxLength={500} />
           </label>
           <button className="button" disabled={busy}>Enviar solicitud</button>
         </form>

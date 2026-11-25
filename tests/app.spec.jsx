@@ -11,18 +11,36 @@ async function setup(path = '/', role = null, transform = () => {}) {
   return { server, user: userEvent.setup() };
 }
 describe('Interfaz React con API simulada', () => {
+  it('abre Mi perfil desde el avatar y aplica la privacidad al guardar', async () => {
+    const { user, server } = await setup('/productos', 'client');
+    await user.click(screen.getByRole('link', { name: 'Mi perfil' }));
+    expect(screen.getByRole('heading', { name: 'Mi perfil' })).toBeTruthy();
+    expect(screen.queryByText(server.current.email)).toBeNull();
+    const name = screen.getByLabelText('Nombre visible');
+    await user.clear(name);
+    await user.type(name, 'Cliente Personalizado');
+    await user.click(screen.getByLabelText('Escudo'));
+    await user.click(screen.getByLabelText('Mostrar mi correo en Mi perfil'));
+    await user.click(screen.getByLabelText('Mostrar mi saldo en el encabezado'));
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    expect(await screen.findByText('Perfil actualizado.')).toBeTruthy();
+    expect(server.current.avatar).toBe('shield');
+    expect(server.current.name).toBe('Cliente Personalizado');
+    expect(screen.getByText(server.current.email)).toBeTruthy();
+    expect(screen.getByLabelText('Recargar saldo virtual').querySelector('strong')).toBeNull();
+  });
   it('permite postular y conserva el estado pendiente en pantalla', async () => {
     const { user, server } = await setup('/vender', 'client');
-    await user.type(await screen.findByLabelText('Skins que quieres vender'), 'AK | Asiimov');
-    await user.type(screen.getByLabelText('Motivo de la solicitud'), 'Quiero vender parte de mi colección.');
+    await user.type(await screen.findByLabelText('Motivo para solicitar el rol'), 'Quiero obtener acceso al panel de vendedor.');
     await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }));
     expect(await screen.findByText('Estado: En revisión')).toBeTruthy();
-    expect(server.applications[0].skins).toBe('AK | Asiimov');
+    expect(server.applications[0].reason).toBe('Quiero obtener acceso al panel de vendedor.');
+    expect(server.applications[0].skins).toBeUndefined();
   });
   it('permite a un administrador aprobar una solicitud', async () => {
     const { user, server } = await setup('/admin', 'admin', (s) => {
       s.applications.push({ userId: 'client-test', name: 'Cliente Prueba', email: 'cliente@example.com',
-        skins: 'AK | Asiimov', reason: 'Quiero vender parte de mi colección.', status: 'PENDIENTE' });
+        reason: 'Quiero obtener acceso al panel de vendedor.', status: 'PENDIENTE' });
     });
     await user.click(screen.getByRole('button', { name: 'Solicitudes de vendedor' }));
     await user.click(await screen.findByRole('button', { name: 'Aprobar' }));

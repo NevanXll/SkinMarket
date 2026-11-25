@@ -56,7 +56,9 @@ Cada servicio organiza su código por controller y service. La biblioteca common
 
 BCrypt protege las contraseñas en MySQL. JWT de acceso dura 15 minutos y se mantiene en memoria. La renovación usa un token opaco rotativo de siete días en cookie HttpOnly, con hash SHA-256 en la BD. En producción requiere HTTPS y `COOKIE_SECURE=true`. Los endpoints de autenticación exigen `X-Requested-With: SkinMarket` y validan Origin; CORS usa una lista explícita. Spring Security comprueba el rol vigente y el estado de la cuenta en cada solicitud autenticada.
 
-Un cliente puede postular desde **Vender skins**. El administrador revisa la solicitud en **Administración → Solicitudes de vendedor**. La aprobación habilita el rol VENDEDOR y su panel de consulta de productos y órdenes.
+El avatar del encabezado abre **Mi perfil**. Cada cuenta puede cambiar su nombre visible, avatar y biografía y controlar si muestra su correo en el perfil y su saldo en el encabezado. MySQL guarda estos ajustes.
+
+El cliente puede solicitar el rol desde **Ser vendedor**. El administrador revisa el motivo y, cuando se incluye, la experiencia o el contexto. La aprobación habilita el rol VENDEDOR y su panel de consulta de productos y órdenes.
 
 El servidor valida datos con Bean Validation, obtiene precios desde MySQL y comprueba saldo y stock. Bloquea las filas durante la compra y usa una clave de solicitud para impedir un doble cargo al reintentar. Los pedidos guardan una copia del producto comprado. Eliminar un producto lo retira del catálogo y conserva el historial. Las cuentas con compras no se eliminan; se pueden bloquear.
 
