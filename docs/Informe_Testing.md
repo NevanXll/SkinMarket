@@ -8,10 +8,10 @@ Comando: `npm test` o `npm run test:coverage`. Herramientas: Jasmine, Karma, Chr
 
 | Métrica | Cubierto | Total | Porcentaje |
 | --- | --- | --- | --- |
-| Líneas | 539 | 622 | 86,65% |
-| Sentencias | 645 | 740 | 87,16% |
-| Funciones | 236 | 292 | 80,82% |
-| Ramas | 583 | 679 | 85,86% |
+| Líneas | 550 | 631 | 87,16% |
+| Sentencias | 656 | 750 | 87,46% |
+| Funciones | 241 | 294 | 81,97% |
+| Ramas | 592 | 688 | 86,04% |
 
 El umbral configurado es 60% en cada métrica. Se incluye código de páginas, componentes, contexto, cliente HTTP y funciones reutilizables. Se excluyen el arranque main.jsx y los datos estáticos. No se redujo el alcance a una única función para alcanzar el porcentaje.
 
@@ -40,6 +40,8 @@ El script crea cuentas y productos QA identificados; se debe ejecutar en una bas
 ## Navegador
 
 Se ejecutó `scripts/capture-ui.cjs` con Chrome y Playwright. Se comprobó el registro, la sesión al recargar, la compra, el inventario, la persistencia del perfil y su privacidad, la solicitud del rol, la aprobación y el detalle de orden como vendedor. El recorrido terminó sin errores JavaScript y el catálogo de 390 × 844 conservó el ancho de pantalla. Las capturas están en `docs/screenshots`.
+
+La prueba de interfaz comprobó que el modal de recarga presenta cuatro opciones en USD y CLP y acredita el valor elegido. También confirmó que el avatar abre el selector de imágenes y que la solicitud a vendedor se alcanza desde Mi perfil.
 
 ## Compilación, contenedores y respaldo
 
