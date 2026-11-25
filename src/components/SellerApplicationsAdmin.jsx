@@ -44,6 +44,10 @@ export default function SellerApplicationsAdmin() {
           <p>{application.email}</p>
           <p><strong>Motivo:</strong> {application.reason}</p>
           {application.experience && <p><strong>Experiencia:</strong> {application.experience}</p>}
+          {application.studies != null && <p><strong>Estudia:</strong> {application.studies ? "Sí" : "No"}</p>}
+          {application.institution && <p><strong>Institución:</strong> {application.institution}</p>}
+          {application.country && <p><strong>Ubicación:</strong> {[application.city, application.region, application.country].filter(Boolean).join(", ")}</p>}
+          {application.postalCode && <p><strong>Código postal:</strong> {application.postalCode}</p>}
           <p>Estado: {{ PENDIENTE: "En revisión", APROBADA: "Aprobada", RECHAZADA: "Rechazada" }[application.status]}</p>
           {application.reviewNote && <p>Comentario: {application.reviewNote}</p>}
           {application.status === "PENDIENTE" && (

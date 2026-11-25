@@ -137,7 +137,7 @@
             "url": "{{base_url}}/me/profile",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Cliente Postman\",\n  \"avatar\": \"shield\",\n  \"bio\": \"Coleccionista\",\n  \"showEmail\": false,\n  \"showHeaderBalance\": true\n}",
+              "raw": "{\n  \"name\": \"Cliente Postman\",\n  \"avatar\": \"shield\",\n  \"bio\": \"Coleccionista\",\n  \"birthDate\": \"1999-05-08\",\n  \"location\": \"Santiago, Chile\",\n  \"showEmail\": false,\n  \"showHeaderBalance\": true,\n  \"showBirthDate\": false,\n  \"showLocation\": false,\n  \"showHeaderName\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1260,7 +1260,7 @@
             "url": "{{base_url}}/seller-application",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reason\": \"Quiero obtener acceso al panel de vendedor.\"\n}",
+              "raw": "{\n  \"reason\": \"Quiero obtener acceso al panel de vendedor.\",\n  \"studies\": true,\n  \"country\": \"Chile\",\n  \"region\": \"Metropolitana\",\n  \"city\": \"Santiago\",\n  \"postalCode\": \"8320000\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

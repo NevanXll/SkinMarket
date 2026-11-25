@@ -9,6 +9,9 @@ export default function SellerApplication() {
   const [application, setApplication] = useState(undefined);
   const [experience, setExperience] = useState("");
   const [reason, setReason] = useState("");
+  const [details, setDetails] = useState({
+    studies: "", institution: "", country: "", region: "", city: "", postalCode: "",
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,14 +25,28 @@ export default function SellerApplication() {
     if (user.role === "client") load().catch((failure) => setError(failure.message));
   }, [user.id, user.role]);
 
+  function change(key, value) {
+    setDetails((current) => ({ ...current, [key]: value }));
+  }
+
   async function submit(event) {
     event.preventDefault();
+    const postalCode = details.postalCode.trim();
+    if (!/^[\p{L}\p{N} -]{0,16}$/u.test(postalCode)) {
+      setError("El código postal admite letras, números, espacios y guiones.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       setApplication(await api("/seller-application", {
         method: "POST",
-        body: { reason: reason.trim(), experience: experience.trim() },
+        body: {
+          reason: reason.trim(), experience: experience.trim(), studies: details.studies === "yes",
+          institution: details.studies === "yes" ? details.institution.trim() : "",
+          country: details.country.trim(), region: details.region.trim(), city: details.city.trim(),
+          postalCode,
+        },
       }));
     } catch (failure) {
       setError(failure.message);
@@ -72,15 +89,52 @@ export default function SellerApplication() {
         </button>
       </div>}
       {(application === null || status === "RECHAZADA") && (
-        <form className="order-card" onSubmit={submit}>
-          <label className="d-block mb-3">
+        <form className="order-card seller-form" onSubmit={submit}>
+          <label>
             Motivo para solicitar el rol
             <textarea className="form-control" value={reason} onChange={(e) => setReason(e.target.value)} minLength={10} maxLength={1000} required />
           </label>
-          <label className="d-block mb-3">
+          <label>
             Experiencia o contexto (opcional)
             <textarea className="form-control" value={experience} onChange={(e) => setExperience(e.target.value)} maxLength={500} />
           </label>
+          <fieldset>
+            <legend>Estudios</legend>
+            <label>
+              ¿Estudias actualmente?
+              <select className="form-select" value={details.studies}
+                onChange={(e) => change("studies", e.target.value)} required>
+                <option value="">Selecciona una opción</option>
+                <option value="yes">Sí</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+            {details.studies === "yes" && <label>
+              Institución educativa (opcional)
+              <input className="form-control" value={details.institution}
+                onChange={(e) => change("institution", e.target.value)} maxLength={120} />
+            </label>}
+          </fieldset>
+          <fieldset>
+            <legend>Ubicación</legend>
+            {[
+              ["country", "País", 80],
+              ["region", "Estado, región o provincia", 100],
+              ["city", "Ciudad", 100],
+            ].map(([key, label, maxLength]) => (
+              <label key={key}>
+                {label}
+                <input className="form-control" value={details[key]}
+                  onChange={(e) => change(key, e.target.value)} maxLength={maxLength} required />
+              </label>
+            ))}
+            <label>
+              Código postal (si aplica)
+              <input className="form-control" value={details.postalCode}
+                onChange={(e) => change("postalCode", e.target.value)} maxLength={16} />
+            </label>
+          </fieldset>
+          <p className="muted mb-0">Estos datos quedan en tu solicitud y se muestran al equipo administrador que la revisa.</p>
           <button className="button" disabled={busy}>Enviar solicitud</button>
         </form>
       )}

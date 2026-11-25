@@ -9,11 +9,11 @@ export const avatarOptions = [
 
 const icons = { crosshair: Crosshair, shield: Shield, star: Star };
 
-export default function ProfileAvatar({ name, avatar }) {
+export default function ProfileAvatar({ name, avatar, photo }) {
   const Icon = icons[avatar];
   return (
     <span className={`avatar avatar-${Icon ? avatar : "initial"}`} aria-hidden="true">
-      {Icon ? <Icon size="56%" /> : name.trim().slice(0, 1).toUpperCase()}
+      {photo ? <img alt="" src={photo} /> : Icon ? <Icon size="56%" /> : name.trim().slice(0, 1).toUpperCase()}
     </span>
   );
 }

@@ -337,6 +337,8 @@ a svg {
 .avatar-crosshair { background: #54288d; }
 .avatar-shield { background: #26536c; }
 .avatar-star { background: #67441c; }
+.avatar { overflow: hidden; }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .profile-settings {
   display: grid;
   gap: 14px;
@@ -353,6 +355,12 @@ a svg {
 .profile-preview .avatar { width: 60px; height: 60px; font-size: 24px; flex: none; }
 .profile-fields { display: grid; gap: 10px; }
 .profile-fields legend { font-size: 1rem; }
+.profile-fields > button { justify-self: start; }
+.seller-form { display: grid; gap: 16px; max-width: 720px; }
+.seller-form label { display: grid; gap: 6px; }
+.seller-form fieldset { display: grid; gap: 12px; }
+.seller-form legend { font-size: 1.1rem; }
+.seller-form > button { justify-self: start; }
 .avatar-options { display: flex; flex-wrap: wrap; gap: 8px; }
 .avatar-options label {
   display: flex;

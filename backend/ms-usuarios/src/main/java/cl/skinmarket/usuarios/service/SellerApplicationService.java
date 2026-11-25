@@ -5,6 +5,7 @@ import cl.skinmarket.common.model.Account;
 import cl.skinmarket.common.model.SellerApplication;
 import cl.skinmarket.common.repository.AccountRepository;
 import cl.skinmarket.common.repository.SellerApplicationRepository;
+import cl.skinmarket.usuarios.dto.SellerApplicationInput;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Function;
@@ -30,7 +31,7 @@ public class SellerApplicationService {
     }
 
     @Transactional
-    public ApplicationView submit(String userId, String reason, String experience) {
+    public ApplicationView submit(String userId, SellerApplicationInput input) {
         var account = accounts.lockById(userId).orElseThrow(ApiException::missing);
         if (account.blocked || !"CLIENTE".equals(account.role)) {
             throw ApiException.denied();
@@ -39,12 +40,18 @@ public class SellerApplicationService {
         if ("PENDIENTE".equals(application.status)) {
             throw ApiException.conflict("Tu solicitud ya está en revisión.");
         }
-        if (reason.strip().length() < 10) {
+        if (input.reason().strip().length() < 10) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Indica el motivo de tu solicitud de rol Vendedor.");
         }
         application.userId = userId;
-        application.reason = reason.strip();
-        application.experience = experience == null || experience.isBlank() ? null : experience.strip();
+        application.reason = input.reason().strip();
+        application.experience = optional(input.experience());
+        application.studies = input.studies();
+        application.institution = input.studies() ? optional(input.institution()) : null;
+        application.country = input.country().strip();
+        application.region = input.region().strip();
+        application.city = input.city().strip();
+        application.postalCode = optional(input.postalCode());
         application.status = "PENDIENTE";
         application.submittedAt = Instant.now();
         application.reviewedAt = null;
@@ -86,10 +93,17 @@ public class SellerApplicationService {
 
     private ApplicationView view(SellerApplication application, Account account) {
         return new ApplicationView(account.id, account.name, account.email, application.reason,
-                application.experience, application.status, application.submittedAt, application.reviewedAt,
-                application.reviewNote);
+                application.experience, application.studies, application.institution, application.country,
+                application.region, application.city, application.postalCode, application.status,
+                application.submittedAt, application.reviewedAt, application.reviewNote);
+    }
+
+    private String optional(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     public record ApplicationView(String userId, String name, String email, String reason, String experience,
+                                  Boolean studies, String institution, String country, String region,
+                                  String city, String postalCode,
                                   String status, Instant submittedAt, Instant reviewedAt, String reviewNote) {}
 }

@@ -104,14 +104,14 @@ export default function Layout({ children }) {
           {user ? (
             <div className="profile">
               <NavLink to="/perfil" className="profile-link" aria-label="Mi perfil">
-                <ProfileAvatar name={user.name} avatar={user.avatar} />
+                <ProfileAvatar name={user.showHeaderName === false ? "?" : user.name} avatar={user.avatar} photo={user.avatarPhoto} />
               </NavLink>
-              <span>
+              {user.showHeaderName !== false && <span>
                 {user.name}
                 <small>
                   {{ admin: "Administrador", seller: "Vendedor", client: "Jugador CS2" }[user.role]}
                 </small>
-              </span>
+              </span>}
               <button
                 className="icon-button"
                 aria-label="Cerrar sesión"

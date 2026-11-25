@@ -4,6 +4,9 @@ import cl.skinmarket.common.model.Account;
 import cl.skinmarket.common.repository.*;
 import cl.skinmarket.common.exception.ApiException;
 import cl.skinmarket.usuarios.dto.ProfileInput;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,7 +31,23 @@ public class UserService {
   a.bio=input.bio().strip();
   a.showEmail=input.showEmail();
   a.showHeaderBalance=input.showHeaderBalance();
+  if(input.avatarPhoto()!=null)a.avatarPhoto=ProfilePhoto.normalize(input.avatarPhoto());
+  if(input.birthDate()!=null)a.birthDate=birthDate(input.birthDate());
+  if(input.location()!=null)a.profileLocation=input.location().strip();
+  if(input.showBirthDate()!=null)a.showBirthDate=input.showBirthDate();
+  if(input.showLocation()!=null)a.showLocation=input.showLocation();
+  if(input.showHeaderName()!=null)a.showHeaderName=input.showHeaderName();
   return Views.profile(a);
+ }
+ private LocalDate birthDate(String value) {
+  if (value.isBlank()) return null;
+  try {
+   var date=LocalDate.parse(value);
+   if(date.getYear()>=1900&&!date.isAfter(LocalDate.now(ZoneOffset.UTC)))return date;
+  } catch(DateTimeParseException ignored) {
+   // Use the same validation response for malformed and out-of-range dates.
+  }
+  throw new ApiException(HttpStatus.BAD_REQUEST,"Ingresa una fecha de nacimiento válida.");
  }
  @Transactional public Map<String,Object> create(Requests.UserInput r){
   if("VENDEDOR".equals(r.role()))throw ApiException.conflict("El rol Vendedor se asigna al aprobar una solicitud.");

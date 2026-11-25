@@ -11,6 +11,12 @@ public final class Views {
   view.put("bio", a.bio);
   view.put("showEmail", a.showEmail);
   view.put("showHeaderBalance", a.showHeaderBalance);
+  view.put("avatarPhoto", a.avatarPhoto);
+  view.put("birthDate", a.birthDate);
+  view.put("location", a.profileLocation);
+  view.put("showBirthDate", a.showBirthDate);
+  view.put("showLocation", a.showLocation);
+  view.put("showHeaderName", a.showHeaderName);
   return view;
  }
  public static Map<String,Object> cart(CartItem c) { return Map.of("productId",c.productId,"quantity",c.quantity); }

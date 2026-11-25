@@ -15,6 +15,17 @@ public class SellerApplication {
     public String experience;
     @Column(nullable = false, length = 1000)
     public String reason;
+    public Boolean studies;
+    @Column(length = 120)
+    public String institution;
+    @Column(length = 80)
+    public String country;
+    @Column(length = 100)
+    public String region;
+    @Column(length = 100)
+    public String city;
+    @Column(name = "postal_code", length = 16)
+    public String postalCode;
     @Column(nullable = false, length = 16)
     public String status;
     @Column(name = "submitted_at", nullable = false)

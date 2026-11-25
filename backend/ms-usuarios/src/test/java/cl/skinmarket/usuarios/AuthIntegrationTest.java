@@ -46,18 +46,30 @@ class AuthIntegrationTest {
   String token="Bearer "+applicant.body().get("accessToken");
   String profile="""
     {"name":"Perfil personalizado","avatar":"shield","bio":"Coleccionista",
-     "showEmail":true,"showHeaderBalance":false,"role":"ADMIN"}
+     "showEmail":true,"showHeaderBalance":false,"role":"ADMIN",
+     "birthDate":"1999-05-08","location":"Santiago, Chile","showBirthDate":false,"showLocation":true,"showHeaderName":false}
     """;
   mvc.perform(put("/api/v1/me/profile").contentType(MediaType.APPLICATION_JSON).content(profile))
    .andExpect(status().isUnauthorized());
   mvc.perform(put("/api/v1/me/profile").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(profile.replace("shield","invalid")))
+   .andExpect(status().isBadRequest());
+  mvc.perform(put("/api/v1/me/profile").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(profile.replace("1999-05-08","2999-05-08")))
    .andExpect(status().isBadRequest());
   mvc.perform(put("/api/v1/me/profile").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(profile))
    .andExpect(status().isOk()).andExpect(jsonPath("$.role").value("CLIENTE"));
   mvc.perform(get("/api/v1/me").header("Authorization",token))
    .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Perfil personalizado"))
    .andExpect(jsonPath("$.avatar").value("shield")).andExpect(jsonPath("$.bio").value("Coleccionista"))
-   .andExpect(jsonPath("$.showEmail").value(true)).andExpect(jsonPath("$.showHeaderBalance").value(false));
+   .andExpect(jsonPath("$.showEmail").value(true)).andExpect(jsonPath("$.showHeaderBalance").value(false))
+   .andExpect(jsonPath("$.birthDate").value("1999-05-08")).andExpect(jsonPath("$.location").value("Santiago, Chile"));
+  var bytes=new java.io.ByteArrayOutputStream();
+  javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(16,16,java.awt.image.BufferedImage.TYPE_INT_RGB),"jpeg",bytes);
+  String photo="data:image/jpeg;base64,"+java.util.Base64.getEncoder().encodeToString(bytes.toByteArray());
+  String withPhoto=profile.replace("\"role\":\"ADMIN\"", "\"avatarPhoto\":\""+photo+"\"");
+  mvc.perform(put("/api/v1/me/profile").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(withPhoto))
+   .andExpect(status().isOk()).andExpect(jsonPath("$.avatarPhoto").isString());
+  mvc.perform(put("/api/v1/me/profile").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(withPhoto.replace(photo,"data:image/jpeg;base64,AAAA")))
+   .andExpect(status().isBadRequest());
  }
  @Test void sellerApplicationRequiresAdminApprovalAndUpdatesCurrentSession() throws Exception {
   var applicant=auth.register(new Requests.Register("Cliente","seller@example.com","Secret123"));
@@ -67,13 +79,17 @@ class AuthIntegrationTest {
   admin.role="ADMIN"; accounts.saveAndFlush(admin);
   String clientToken="Bearer "+applicant.body().get("accessToken");
   String adminToken="Bearer "+reviewer.body().get("accessToken");
-  String form="{\"reason\":\"Quiero obtener acceso al panel de vendedor.\"}";
+  String form="""
+    {"reason":"Quiero obtener acceso al panel de vendedor.","studies":true,
+     "institution":"Instituto de prueba","country":"Chile","region":"Metropolitana","city":"Santiago","postalCode":"8320000"}
+    """;
   String decision="{\"approved\":true}";
   var url="/api/v1/admin/seller-applications/"+account.id;
 
   mvc.perform(get("/api/v1/seller-application").header("Authorization",clientToken)).andExpect(status().isNoContent());
   mvc.perform(post("/api/v1/seller-application").header("Authorization",clientToken).contentType(MediaType.APPLICATION_JSON).content(form))
    .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("PENDIENTE"))
+   .andExpect(jsonPath("$.studies").value(true)).andExpect(jsonPath("$.postalCode").value("8320000"))
    .andExpect(jsonPath("$.skins").doesNotExist());
   mvc.perform(post("/api/v1/seller-application").header("Authorization",clientToken).contentType(MediaType.APPLICATION_JSON).content(form))
    .andExpect(status().isConflict());

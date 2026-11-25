@@ -48,7 +48,8 @@ for n in range(2):
     clients.append(client)
 client = clients[0]
 profile = {'name': 'QA Perfil', 'avatar': 'shield', 'bio': 'Prueba de persistencia',
-           'showEmail': False, 'showHeaderBalance': False}
+           'showEmail': False, 'showHeaderBalance': False, 'birthDate': '1999-05-08',
+           'location': 'Santiago, Chile', 'showBirthDate': False, 'showLocation': False, 'showHeaderName': False}
 anonymous.call('PUT', '/me/profile', profile, 401)
 client.call('PUT', '/me/profile', {**profile, 'avatar': 'invalid'}, 400)
 client.call('PUT', '/me/profile', {**profile, 'role': 'ADMIN'})
@@ -101,9 +102,12 @@ admin.call('DELETE', '/admin/users/' + user['id'], expected=204)
 admin.call('GET', '/admin/users/' + user['id'], expected=404)
 loser.call('GET', '/seller/orders', expected=403)
 loser.call('GET', '/seller-application', expected=204)
-form = {'reason': 'Quiero obtener acceso al panel de vendedor.'}
+form = {'reason': 'Quiero obtener acceso al panel de vendedor.', 'studies': True,
+        'institution': 'Instituto de prueba', 'country': 'Chile', 'region': 'Metropolitana',
+        'city': 'Santiago', 'postalCode': '8320000'}
 application = loser.call('POST', '/seller-application', form, 201)
 assert application['status'] == 'PENDIENTE' and 'skins' not in application
+assert application['studies'] is True and application['postalCode'] == '8320000'
 review = '/admin/seller-applications/' + application['userId']
 loser.call('PUT', review, {'approved': True}, 403)
 admin.call('GET', '/admin/seller-applications')

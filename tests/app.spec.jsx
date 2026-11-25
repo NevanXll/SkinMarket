@@ -20,22 +20,39 @@ describe('Interfaz React con API simulada', () => {
     await user.clear(name);
     await user.type(name, 'Cliente Personalizado');
     await user.click(screen.getByLabelText('Escudo'));
+    fireEvent.change(screen.getByLabelText('Fecha de nacimiento (opcional)'), { target: { value: '1999-05-08' } });
+    await user.type(screen.getByLabelText('Ubicación de perfil (opcional)'), 'Santiago, Chile');
+    const canvas = document.createElement('canvas');
+    const bitmap = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
+    await user.upload(screen.getByLabelText('Subir foto de perfil'), new File([bitmap], 'avatar.jpg', { type: bitmap.type }));
+    expect(await screen.findByRole('button', { name: 'Quitar foto' })).toBeTruthy();
     await user.click(screen.getByLabelText('Mostrar mi correo en Mi perfil'));
     await user.click(screen.getByLabelText('Mostrar mi saldo en el encabezado'));
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
     expect(await screen.findByText('Perfil actualizado.')).toBeTruthy();
     expect(server.current.avatar).toBe('shield');
     expect(server.current.name).toBe('Cliente Personalizado');
+    expect(server.current.birthDate).toBe('1999-05-08');
+    expect(server.current.avatarPhoto).toMatch(/^data:image\/jpeg;base64,/);
+    expect(screen.queryByText('Santiago, Chile')).toBeNull();
     expect(screen.getByText(server.current.email)).toBeTruthy();
     expect(screen.getByLabelText('Recargar saldo virtual').querySelector('strong')).toBeNull();
   });
   it('permite postular y conserva el estado pendiente en pantalla', async () => {
     const { user, server } = await setup('/vender', 'client');
     await user.type(await screen.findByLabelText('Motivo para solicitar el rol'), 'Quiero obtener acceso al panel de vendedor.');
+    await user.selectOptions(screen.getByLabelText('¿Estudias actualmente?'), 'yes');
+    await user.type(screen.getByLabelText('Institución educativa (opcional)'), 'Instituto de prueba');
+    await user.type(screen.getByLabelText('País'), 'Chile');
+    await user.type(screen.getByLabelText('Estado, región o provincia'), 'Metropolitana');
+    await user.type(screen.getByLabelText('Ciudad'), 'Santiago');
+    await user.type(screen.getByLabelText('Código postal (si aplica)'), '8320000');
     await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }));
     expect(await screen.findByText('Estado: En revisión')).toBeTruthy();
     expect(server.applications[0].reason).toBe('Quiero obtener acceso al panel de vendedor.');
     expect(server.applications[0].skins).toBeUndefined();
+    expect(server.applications[0].postalCode).toBe('8320000');
+    expect(server.applications[0].studies).toBeTrue();
   });
   it('permite a un administrador aprobar una solicitud', async () => {
     const { user, server } = await setup('/admin', 'admin', (s) => {

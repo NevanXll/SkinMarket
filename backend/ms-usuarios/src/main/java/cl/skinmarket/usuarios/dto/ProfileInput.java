@@ -10,5 +10,11 @@ public record ProfileInput(
         @NotBlank @Pattern(regexp = "initial|crosshair|shield|star") String avatar,
         @NotNull @Size(max = 240) String bio,
         @NotNull Boolean showEmail,
-        @NotNull Boolean showHeaderBalance
+        @NotNull Boolean showHeaderBalance,
+        @Size(max = 100_000) String avatarPhoto,
+        @Size(max = 10) String birthDate,
+        @Size(max = 120) String location,
+        Boolean showBirthDate,
+        Boolean showLocation,
+        Boolean showHeaderName
 ) {}

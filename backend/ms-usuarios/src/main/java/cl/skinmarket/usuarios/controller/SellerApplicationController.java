@@ -1,9 +1,9 @@
 package cl.skinmarket.usuarios.controller;
 
 import cl.skinmarket.usuarios.service.SellerApplicationService;
+import cl.skinmarket.usuarios.dto.SellerApplicationInput;
 import cl.skinmarket.usuarios.service.SellerApplicationService.ApplicationView;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.security.Principal;
@@ -32,8 +32,8 @@ public class SellerApplicationController {
     @PostMapping("/seller-application")
     @PreAuthorize("hasRole('CLIENTE')")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApplicationView submit(Principal principal, @Valid @RequestBody ApplicationInput input) {
-        return applications.submit(principal.getName(), input.reason(), input.experience());
+    public ApplicationView submit(Principal principal, @Valid @RequestBody SellerApplicationInput input) {
+        return applications.submit(principal.getName(), input);
     }
 
     @GetMapping("/admin/seller-applications")
@@ -48,7 +48,5 @@ public class SellerApplicationController {
         return applications.review(userId, input.approved(), input.note());
     }
 
-    public record ApplicationInput(@NotBlank @Size(min = 10, max = 1000) String reason,
-                                   @Size(max = 500) String experience) {}
     public record ReviewInput(@NotNull Boolean approved, @Size(max = 500) String note) {}
 }
