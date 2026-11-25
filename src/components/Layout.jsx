@@ -45,12 +45,11 @@ export default function Layout({ children }) {
           className={menu ? "main-nav open" : "main-nav"}
           onClick={() => setMenu(false)}
         >
-          {seller ? <NavLink to="/vendedor">Panel de vendedor</NavLink> : <>
-            <NavLink to="/" end>Inicio</NavLink>
-            <NavLink to="/productos">Mercado</NavLink>
-            <NavLink to="/inventario">Inventario</NavLink>
-            <NavLink to="/compras">Mis compras</NavLink>
-          </>}
+          <NavLink to="/" end>Inicio</NavLink>
+          <NavLink to="/productos">Mercado</NavLink>
+          <NavLink to="/inventario">Inventario</NavLink>
+          <NavLink to="/compras">Mis compras</NavLink>
+          {seller && <NavLink to="/vendedor">Panel de vendedor</NavLink>}
           {user?.role === "admin" && (
             <NavLink to="/admin">Administración</NavLink>
           )}
@@ -74,7 +73,7 @@ export default function Layout({ children }) {
             <option>USD</option>
             <option>CLP</option>
           </select>
-          {user && !seller && (
+          {user && (
             <button
               className="wallet-button"
               aria-label="Recargar saldo virtual"
@@ -87,14 +86,14 @@ export default function Layout({ children }) {
               </span>
             </button>
           )}
-          {!seller && <NavLink
+          <NavLink
             to="/carrito"
             className="cart-link"
             aria-label={`Carrito, ${user?.cart.reduce((n, l) => n + l.quantity, 0) || 0} artículos`}
           >
             <ShoppingCart size={23} />
             <b>{user?.cart.reduce((n, l) => n + l.quantity, 0) || 0}</b>
-          </NavLink>}
+          </NavLink>
           {user ? (
             <div className="profile">
               <NavLink to="/perfil" className="profile-link" aria-label="Mi perfil">
@@ -155,7 +154,7 @@ export default function Layout({ children }) {
           {notice.text}
         </div>
       )}
-      {wallet && user && !seller && (
+      {wallet && user && (
         <WalletTopUp currency={state.currency} topUp={topUp} onClose={() => setWallet(false)} />
       )}
     </>

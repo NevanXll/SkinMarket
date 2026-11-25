@@ -72,15 +72,45 @@ describe('Interfaz React con API simulada', () => {
     expect(await screen.findByText('Estado: Aprobada')).toBeTruthy();
     expect(server.accounts[0].role).toBe('VENDEDOR');
   });
-  it('muestra un panel de vendedor de solo lectura con detalle de órdenes', async () => {
+  it('muestra un dashboard de vendedor y el detalle de sus ventas', async () => {
     const { user } = await setup('/vendedor', 'seller', (s) => {
-      s.orders.push({ id: 'purchase-1', date: '2026-11-24T12:00:00Z', total: 10, items: [{ id: 'p1', name: 'Skin de prueba', quantity: 1 }] });
+      s.sellerOrders.push({ id: 'purchase-1', date: '2026-11-24T12:00:00Z', total: 10, items: [{ id: 'p1', name: 'Skin de prueba', quantity: 1, price: 10 }] });
     });
     expect(screen.queryByRole('button', { name: 'Añadir al carrito' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Administración' })).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Órdenes' }));
+    expect(await screen.findByRole('heading', { name: 'Mis ventas de los últimos 7 días' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Historial de ventas' }));
     await user.click(await screen.findByRole('link', { name: 'Ver detalle' }));
     expect(await screen.findByText('1 × Skin de prueba')).toBeTruthy();
+  });
+  it('publica una skin seleccionada del inventario, edita su precio y permite pausarla', async () => {
+    const { user, server } = await setup('/vendedor', 'seller', (s) => {
+      s.sellerInventory.push({ orderId: 'mio', productId: 'skin-mia', name: 'Skin del vendedor',
+        image: s.products[0].image, quantity: 2, acquiredAt: '2026-11-24T12:00:00Z' });
+    });
+    await user.click(screen.getByRole('button', { name: 'Publicaciones' }));
+    await user.click(await screen.findByRole('button', { name: 'Publicar skin' }));
+    const select = screen.getByRole('combobox', { name: 'Skin de mi inventario' });
+    expect(within(select).getAllByRole('option').length).toBe(2);
+    await user.selectOptions(select, 'mio/skin-mia');
+    fireEvent.change(screen.getByLabelText('Precio por unidad en USD'), { target: { value: '20' } });
+    await user.click(screen.getByRole('button', { name: 'Publicar en el mercado' }));
+    expect(await screen.findByText('Skin publicada en el mercado.')).toBeTruthy();
+    expect(server.sellerListings[0].price).toBe(20);
+    fireEvent.change(screen.getByLabelText('Precio por unidad en USD'), { target: { value: '27' } });
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    await waitFor(() => expect(server.sellerListings[0].price).toBe(27));
+    await user.click(screen.getByRole('button', { name: 'Pausar' }));
+    expect(await screen.findByRole('button', { name: 'Reactivar publicación' })).toBeTruthy();
+    expect(server.sellerListings[0].stock).toBe(0);
+  });
+  it('permite al vendedor seguir comprando skins para su inventario', async () => {
+    const { user } = await setup('/vendedor', 'seller');
+    await user.click(screen.getByRole('link', { name: 'Mercado' }));
+    await user.click((await screen.findAllByRole('button', { name: 'Añadir al carrito' }))[0]);
+    await user.click(await screen.findByRole('link', { name: /Carrito, 1/ }));
+    await user.click(screen.getByRole('button', { name: /Confirmar compra/ }));
+    expect(await screen.findByRole('heading', { name: /Mi inventario/ })).toBeTruthy();
   });
   it('muestra inicio, menú móvil y catálogo sin selector de juego', async () => { const { user } = await setup(); expect(screen.getByRole('heading', { name: /LAS MEJORES/ })).toBeTruthy(); expect(within(screen.getByRole('complementary', { name: 'Filtros del catálogo' })).queryByText('Juego')).toBeNull(); await user.click(screen.getByLabelText('Abrir menú')); await user.click(screen.getByRole('link', { name: 'Mercado' })); expect(screen.getByRole('heading', { name: /Encuentra tu próxima/ })).toBeTruthy(); await user.click(screen.getByRole('button', { name: 'Filtros', exact: true })); await user.click(screen.getByLabelText('Cerrar filtros')); });
   it('limpia caracteres extraños y permite restablecer filtros', async () => { const { user } = await setup('/productos'); await user.type(screen.getByLabelText('Buscar skin'), 'Dragon<'); expect(screen.getByText('Se eliminaron caracteres no permitidos.')).toBeTruthy(); await user.click(screen.getByRole('button', { name: 'Limpiar', exact: true })); await user.selectOptions(screen.getByLabelText('Tipo de arma'), 'Pistolas'); });

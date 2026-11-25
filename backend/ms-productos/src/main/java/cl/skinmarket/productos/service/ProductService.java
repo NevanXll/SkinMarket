@@ -22,11 +22,11 @@ public class ProductService {
     }
 
     public List<Product> list() {
-        return products.findByDeletedFalseOrderByNameAsc();
+        return products.listMarket();
     }
 
     public Product get(String id) {
-        return products.findByIdAndDeletedFalse(id).orElseThrow(ApiException::missing);
+        return products.findMarketProduct(id).orElseThrow(ApiException::missing);
     }
 
     @Transactional
@@ -40,6 +40,9 @@ public class ProductService {
     @Transactional
     public Product update(String id, ProductInput input) {
         var product = lockActiveProduct(id);
+        if (product.isResale()) {
+            throw ApiException.conflict("El vendedor gestiona el precio y la cantidad de esta publicación.");
+        }
         apply(product, input);
         return products.saveAndFlush(product);
     }

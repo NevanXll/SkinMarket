@@ -47,7 +47,7 @@ export default function ProductCard({ product, compact = false }) {
             {product.stock ? `${product.stock} disponibles` : "Agotado"}
           </small>
         </div>
-        {!compact && user?.role !== "seller" && (
+        {!compact && (
           <button
             className="button add-button"
             onClick={add}

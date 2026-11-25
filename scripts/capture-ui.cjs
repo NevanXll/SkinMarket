@@ -120,11 +120,44 @@ const assert = require('node:assert/strict');
     await page.getByRole('button', { name: 'Entrar a SkinMarket' }).click();
     await page.getByRole('heading', { name: 'Panel de vendedor' }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Añadir al carrito' }).count(), 0);
-    await page.getByRole('button', { name: 'Órdenes', exact: true }).click();
-    await page.getByRole('link', { name: 'Ver detalle', exact: true }).first().click();
-    await page.getByRole('heading', { name: 'Detalle de orden' }).waitFor();
+    await page.getByRole('button', { name: 'Publicaciones', exact: true }).click();
+    await page.getByRole('button', { name: 'Publicar skin', exact: true }).click();
+    const selector = page.getByRole('combobox', { name: 'Skin de mi inventario' });
+    await selector.selectOption({ index: 1 });
+    await page.getByLabel('Precio por unidad en USD').fill('22.5');
+    await shot('13-publicacion');
+    const savedListing = page.waitForResponse((response) =>
+      response.url().endsWith('/seller/listings') && response.request().method() === 'POST' && response.status() === 201);
+    await page.getByRole('button', { name: 'Publicar en el mercado' }).click();
+    const listing = await (await savedListing).json();
+    await page.getByText('Skin publicada en el mercado.', { exact: true }).waitFor();
+
+    const buyerContext = await browser.newContext();
+    try {
+      const buyer = await buyerContext.newPage();
+      await buyer.goto('http://localhost:8080/#/acceso');
+      await buyer.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
+      await buyer.getByLabel('Nombre', { exact: true }).fill('Cliente Reventa');
+      await buyer.getByLabel('Correo electrónico').fill(`qa-resale-${crypto.randomBytes(5).toString('hex')}@example.com`);
+      await buyer.getByLabel('Contraseña', { exact: true }).fill(crypto.randomBytes(16).toString('hex'));
+      await buyer.getByRole('button', { name: 'Crear mi cuenta' }).click();
+      await buyer.getByRole('heading', { name: /Encuentra tu próxima/ }).waitFor();
+      await buyer.goto(`http://localhost:8080/#/productos/${listing.id}`);
+      await buyer.getByRole('button', { name: 'Añadir al carrito', exact: true }).click();
+      await buyer.getByRole('link', { name: /Carrito, 1/ }).click();
+      await buyer.getByRole('button', { name: /Confirmar compra/ }).click();
+      await buyer.getByRole('heading', { name: /Mi inventario/ }).waitFor();
+    } finally { await buyerContext.close(); }
+
+    await page.reload();
+    await page.getByRole('heading', { name: 'Mis ventas de los últimos 7 días' }).waitFor();
     await shot('10-vendedor');
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'El panel de vendedor desborda en móvil');
+    await page.getByRole('button', { name: 'Historial de ventas', exact: true }).click();
+    await page.getByRole('link', { name: 'Ver detalle', exact: true }).first().click();
+    await page.getByRole('heading', { name: 'Detalle de venta' }).waitFor();
     assert.deepEqual(errors, [], 'Errores JavaScript en el navegador');
-    console.log('OK: registro, sesión, compra, inventario, postulación, aprobación, panel de vendedor y vista móvil.');
+    console.log('OK: registro, sesión, compra, inventario, postulación, aprobación, publicación, venta e historial del vendedor en móvil.');
   } finally { await browser.close(); }
 })().catch((e) => { console.error(e.message); process.exitCode = 1; });

@@ -54,7 +54,7 @@ export default function Cart() {
                   <img src={imageUrl(l.product.image)} alt={l.product.name} />
                 )}
                 <div>
-                  <h3>{l.product?.name || "Producto eliminado"}</h3>
+                  <h3>{l.product?.name || "Producto no disponible"}</h3>
                   <p className="muted">
                     {l.product?.wear} · {l.product?.stock || 0} en stock
                   </p>
@@ -64,7 +64,8 @@ export default function Cart() {
                 </div>
                 <div className="quantity-control">
                   <button
-                    aria-label={`Reducir ${l.product?.name}`}
+                    aria-label={`Reducir ${l.product?.name || "producto no disponible"}`}
+                    disabled={!l.product && l.quantity > 1}
                     onClick={() => change(l.productId, l.quantity - 1)}
                   >
                     <Minus size={14} />
@@ -80,7 +81,7 @@ export default function Cart() {
                 </div>
                 <button
                   className="icon-button danger"
-                  aria-label={`Quitar ${l.product?.name}`}
+                  aria-label={`Quitar ${l.product?.name || "producto no disponible"}`}
                   onClick={() => change(l.productId, 0)}
                 >
                   <Trash2 size={18} />

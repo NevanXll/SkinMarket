@@ -157,6 +157,8 @@ export default function Admin() {
                         <button
                           className="icon-button"
                           aria-label={`Editar ${p.name}`}
+                          disabled={p.resale}
+                          title={p.resale ? "El vendedor gestiona esta publicación." : undefined}
                           onClick={() => edit(p)}
                         >
                           <Pencil size={16} />

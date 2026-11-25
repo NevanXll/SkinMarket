@@ -11,7 +11,7 @@ import ProductDetail from "./pages/ProductDetail";
 import SellerApplication from "./pages/SellerApplication";
 import SellerPanel from "./pages/SellerPanel";
 import Profile from "./pages/Profile";
-function Protected({ children, admin = false, allowed = ["client", "admin"] }) {
+function Protected({ children, admin = false, allowed = ["client", "admin", "seller"] }) {
   const { user, loading } = useMarket();
   if (loading) return <p role="status">Restaurando sesión…</p>;
   if (!user) return <Navigate to="/acceso" replace />;
@@ -37,8 +37,8 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={seller ? <Navigate to="/vendedor" replace /> : <Catalogue home />} />
-        <Route path="/productos" element={seller ? <Navigate to="/vendedor" replace /> : <Catalogue />} />
+        <Route path="/" element={<Catalogue home />} />
+        <Route path="/productos" element={<Catalogue />} />
         <Route path="/productos/:id" element={<ProductDetail />} />
         <Route path="/acceso" element={seller ? <Navigate to="/vendedor" replace /> : <Auth />} />
         <Route path="/vender" element={

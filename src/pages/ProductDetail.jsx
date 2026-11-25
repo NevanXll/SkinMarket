@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import ProductCard from '../components/ProductCard';
-import { useMarket } from '../context/MarketContext';
 export default function ProductDetail() {
   const { id } = useParams();
-  const { user } = useMarket();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -14,7 +12,7 @@ export default function ProductDetail() {
       .catch((e) => { if (active) setError(e.message); });
     return () => { active = false; };
   }, [id]);
-  return <div className="page-container"><Link to={user?.role === "seller" ? "/vendedor" : "/productos"}>← {user?.role === "seller" ? "Volver al panel" : "Volver al mercado"}</Link>
+  return <div className="page-container"><Link to="/productos">← Volver al mercado</Link>
     {error ? <p role="alert">{error}</p> : product ? <section>
       <h1>{product.name}</h1><p>{product.collection} · {product.wear}</p>
       <div style={{ maxWidth: 420 }}><ProductCard product={product} /></div>

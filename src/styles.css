@@ -792,6 +792,8 @@ a svg {
   height: 136px;
   display: grid;
   place-items: center;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  overflow: hidden;
   background: radial-gradient(
     ellipse at 50% 70%,
     color-mix(in srgb, var(--rarity) 10%, transparent),
@@ -802,6 +804,7 @@ a svg {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  pointer-events: none;
   filter: drop-shadow(0 8px 5px #02040c66);
   transition: transform 0.25s;
 }

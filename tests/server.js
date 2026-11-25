@@ -7,6 +7,9 @@ export function mockServer(role = null) {
   const seller = { ...client, id: 'seller-test', name: 'Vendedor Prueba', role: 'VENDEDOR' };
   const server = { products: structuredClone(catalogue), accounts: [client, admin], current: ({ admin, client, seller })[role] || null, cart: [], orders: [], inventory: [], applications: [], fail: '' };
   server.walletPackages = [500, 1000, 2500, 5000].map((credits) => ({ id: `pack-${credits}`, credits, priceUsd: credits }));
+  server.sellerListings = [];
+  server.sellerInventory = [];
+  server.sellerOrders = [];
   spyOn(window, 'fetch').and.callFake(async (url, options = {}) => {
     const path = url.replace('/api/v1', ''); const method = options.method || 'GET';
     const body = options.body ? JSON.parse(options.body) : {};
@@ -40,8 +43,22 @@ export function mockServer(role = null) {
       if (body.approved) server.accounts.find((account) => account.id === userId).role = 'VENDEDOR';
       return reply(application);
     }
-    if (path === '/seller/orders') return reply(server.orders);
-    if (path.startsWith('/seller/orders/')) return reply(server.orders.find((order) => order.id === path.split('/').pop()));
+    if (path === '/seller/orders') return reply(server.sellerOrders);
+    if (path.startsWith('/seller/orders/')) return reply(server.sellerOrders.find((order) => order.id === path.split('/').pop()));
+    if (path === '/seller/listings' && method === 'GET') return reply({ listings: server.sellerListings, inventory: server.sellerInventory });
+    if (path === '/seller/listings' && method === 'POST') {
+      const item = server.sellerInventory.find((skin) => skin.orderId === body.orderId && skin.productId === body.productId);
+      const listing = { id: 'my-listing', name: item.name, image: item.image, available: item.quantity, sold: 0,
+        stock: body.quantity, price: body.price, removed: false };
+      server.sellerListings.push(listing);
+      server.sellerInventory = server.sellerInventory.filter((skin) => skin !== item);
+      return reply(listing, 201);
+    }
+    if (path.startsWith('/seller/listings/') && method === 'PUT') {
+      const listing = server.sellerListings.find((row) => row.id === path.split('/').pop());
+      Object.assign(listing, { price: body.price, stock: body.quantity });
+      return reply(listing);
+    }
     if(path === '/products' && method === 'GET') return reply(server.products);
     if(path === '/products' && method === 'POST') { const p = { ...body, id: 'new-product', weapon: body.name, finish: 'Nuevo' }; server.products.push(p); return reply(p, 201); }
     if(path.startsWith('/products/')) { const id = path.split('/').pop(); const p = server.products.find((p) => p.id === id); if(!p) return reply({ message: 'Producto no encontrado' }, 404); if(method === 'DELETE') { server.products = server.products.filter((p) => p.id !== id); return reply(null, 204); } if(method === 'PUT') Object.assign(p, body); return reply(p); }

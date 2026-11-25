@@ -18,6 +18,4 @@ public class OrderController {
  @GetMapping("/api/v1/orders/{id}") public Object order(Authentication a,@PathVariable String id){return orders.order(a.getName(),a.getAuthorities().stream().anyMatch(r->r.getAuthority().equals("ROLE_ADMIN")),id);}
  @GetMapping("/api/v1/inventory") public Object inventory(Principal p){return orders.inventory(p.getName());}
  @GetMapping("/api/v1/admin/orders") @PreAuthorize("hasRole('ADMIN')") public Object all(){return orders.allOrders();}
- @GetMapping("/api/v1/seller/orders") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public Object sellerOrders(){return orders.allOrders();}
- @GetMapping("/api/v1/seller/orders/{id}") @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") public Object sellerOrder(@PathVariable String id){return orders.order(null,true,id);}
 }

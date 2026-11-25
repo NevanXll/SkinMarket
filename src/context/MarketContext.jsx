@@ -24,10 +24,6 @@ export function MarketProvider({ children }) {
     const products = await api('/products');
     if (!authenticated) { commit({ ...current.current, products, users: [], sessionId: null }); return; }
     const me = accountView(await api('/me'));
-    if (me.role === 'seller') {
-      commit({ ...current.current, products, users: [me], sessionId: me.id });
-      return;
-    }
     const [cart, orders, inventory] = await Promise.all([api('/cart'), api('/orders'), api('/inventory')]);
     let users = [me];
     if (me.role === 'admin') {

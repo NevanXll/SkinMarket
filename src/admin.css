@@ -496,3 +496,37 @@
 .admin-wallet-package label { display: grid; gap: 6px; }
 .admin-wallet-package p { margin: 0; }
 .admin-wallet-package button { justify-self: start; }
+.seller-panel { max-width: 1120px; }
+.seller-panel .admin-tabs button { display: inline-flex; align-items: center; gap: 6px; }
+.seller-back { margin-bottom: 20px; }
+.seller-section-heading, .seller-listing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.seller-section-heading { justify-content: space-between; margin: 26px 0 15px; }
+.seller-section-heading h2, .seller-skin-preview p { margin: 0; }
+.seller-metrics, .seller-listing-fields, .seller-listings-grid { display: grid; gap: 14px; }
+.seller-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.seller-listing-fields, .seller-listings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seller-listing-form { display: grid; gap: 14px; }
+.seller-listing-form form { display: grid; gap: 10px; }
+.seller-listing-form label { display: grid; gap: 6px; min-width: 0; }
+.seller-listing-form .form-select { background-color: #191f2b; color: #f0f0f7; border-color: #41455a; color-scheme: dark; }
+.seller-listing-form .form-select:focus { border-color: #aa7bff; }
+.seller-listings-grid { margin-top: 16px; }
+.seller-skin-preview { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.seller-skin-preview img { width: 90px; height: 58px; object-fit: contain; flex: none; }
+.seller-sale-lines { display: grid; gap: 8px; list-style: none; padding: 0; }
+.seller-sale-lines li { display: flex; justify-content: space-between; gap: 10px; }
+.seller-sales-chart .sales-columns { overflow-x: auto; }
+@media (max-width: 720px) {
+  .seller-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seller-listings-grid { grid-template-columns: minmax(0, 1fr); }
+  .seller-panel .admin-tabs { flex-wrap: wrap; }
+  .seller-panel .admin-tabs button { padding-inline: 8px; }
+}
+@media (max-width: 390px) {
+  .seller-listing-fields { grid-template-columns: minmax(0, 1fr); }
+}

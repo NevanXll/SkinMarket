@@ -40,7 +40,7 @@ public class WalletService {
  @Transactional
  public Map<String, Object> topUp(String userId, String packageId, BigDecimal expectedPrice, String requestKey) {
   var account = accounts.lockById(userId).orElseThrow(ApiException::missing);
-  if (account.blocked || "VENDEDOR".equals(account.role)) throw ApiException.denied();
+  if (account.blocked) throw ApiException.denied();
 
   var previous = topUps.findByUserIdAndRequestKey(userId, requestKey);
   if (previous.isPresent()) {

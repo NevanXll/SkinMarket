@@ -58,7 +58,7 @@ BCrypt protege las contraseñas en MySQL. JWT de acceso dura 15 minutos y se man
 
 El avatar del encabezado abre **Mi perfil**. Cada cuenta puede subir una foto desde la vista previa, elegir un avatar, editar su nombre y biografía y registrar una ubicación y fecha de nacimiento opcionales. Los ajustes controlan qué datos aparecen en el resumen del perfil y en el encabezado. MySQL guarda los cambios.
 
-Desde **Mi perfil → Ser vendedor**, el cliente solicita el rol. El administrador revisa el motivo, la situación de estudios y la ubicación. La experiencia, la institución educativa y el código postal se completan según corresponda. La aprobación habilita el rol VENDEDOR y su panel de productos y órdenes.
+El cliente solicita el rol desde **Mi perfil → Ser vendedor**. Tras la aprobación, puede publicar skins compradas con su cuenta, definir precio y unidades, pausar publicaciones y consultar su historial y sus métricas de ventas. El vendedor conserva el acceso al mercado, al carrito y a su inventario.
 
 El servidor valida datos con Bean Validation, obtiene precios desde MySQL y comprueba saldo y stock. Bloquea las filas durante la compra y usa una clave de solicitud para impedir un doble cargo al reintentar. Los pedidos guardan una copia del producto comprado. Eliminar un producto lo retira del catálogo y conserva el historial. Las cuentas con compras no se eliminan; se pueden bloquear.
 

@@ -124,6 +124,10 @@ admin.call('PUT', '/admin/users/' + user['id'], {**user, 'blocked': True})
 admin.call('DELETE', '/admin/users/' + user['id'], expected=204)
 admin.call('GET', '/admin/users/' + user['id'], expected=404)
 loser.call('GET', '/seller/orders', expected=403)
+loser.call('GET', '/seller/listings', expected=403)
+second_product = admin.call('POST', '/products', {**product, 'name': 'QA Skin de reventa ' + suffix, 'stock': 2}, 201)
+loser.call('PUT', '/cart/' + second_product['id'], {'quantity': 2})
+second_order = loser.call('POST', '/orders', {'requestKey': 'inventory-' + suffix}, 201)
 loser.call('GET', '/seller-application', expected=204)
 form = {'reason': 'Quiero obtener acceso al panel de vendedor.', 'studies': True,
         'institution': 'Instituto de prueba', 'country': 'Chile', 'region': 'Metropolitana',
@@ -139,12 +143,59 @@ assert loser.call('GET', '/seller-application')['status'] == 'RECHAZADA'
 loser.call('POST', '/seller-application', form, 201)
 assert admin.call('PUT', review, {'approved': True})['status'] == 'APROBADA'
 assert loser.call('GET', '/me')['role'] == 'VENDEDOR'
-assert any(row['id'] == order['id'] for row in loser.call('GET', '/seller/orders'))
-assert loser.call('GET', '/seller/orders/' + order['id'])['id'] == order['id']
+assert loser.call('GET', '/seller/orders') == []
+loser.call('GET', '/seller/orders/' + order['id'], expected=404)
 loser.call('GET', '/products')
-loser.call('GET', '/cart', expected=403)
+assert loser.call('GET', '/cart') == []
 loser.call('GET', '/admin/users', expected=403)
 loser.call('POST', '/products', product, 403)
+winner.login(f'qa-{suffix}-{winner_index}@example.com', password)
+seller_one = winner.call('POST', '/seller-application', form, 201)
+admin.call('PUT', '/admin/seller-applications/' + seller_one['userId'], {'approved': True})
+assert any(item['orderId'] == order['id'] for item in winner.call('GET', '/seller/listings')['inventory'])
+assert any(item['orderId'] == second_order['id'] for item in loser.call('GET', '/seller/listings')['inventory'])
+listing_input = {'orderId': order['id'], 'productId': pid, 'price': 12, 'quantity': 1}
+loser.call('POST', '/seller/listings', listing_input, 404)
+winner.call('POST', '/seller/listings', {**listing_input, 'quantity': 2}, 409)
+winner.call('POST', '/seller/listings', {**listing_input, 'price': 0}, 400)
+first_listing = winner.call('POST', '/seller/listings', listing_input, 201)
+winner.call('POST', '/seller/listings', listing_input, 409)
+first_path = '/seller/listings/' + first_listing['id']
+loser.call('PUT', first_path, {'price': 15, 'quantity': 1}, 404)
+winner.call('PUT', first_path, {'price': 14.5, 'quantity': 0})
+anonymous.call('GET', '/products/' + first_listing['id'], expected=404)
+winner.call('PUT', first_path, {'price': 14.5, 'quantity': 1})
+assert anonymous.call('GET', '/products/' + first_listing['id'])['price'] == 14.5
+winner.call('PUT', '/cart/' + first_listing['id'], {'quantity': 1}, 409)
+second_listing = loser.call('POST', '/seller/listings',
+    {'orderId': second_order['id'], 'productId': second_product['id'], 'price': 23, 'quantity': 2}, 201)
+buyer = Client()
+session = buyer.call('POST', '/auth/register',
+    {'name': 'QA Cliente reventa', 'email': f'qa-resale-{suffix}@example.com', 'password': password}, 201)
+buyer.token = session['accessToken']
+for listing in [first_listing, second_listing]:
+    buyer.call('PUT', '/cart/' + listing['id'], {'quantity': 1})
+sale = buyer.call('POST', '/orders', {'requestKey': 'resale-' + suffix}, 201)
+assert sale['total'] == 37.5
+buyer.call('POST', '/orders', {'requestKey': 'resale-' + suffix}, 201)
+assert len(buyer.call('GET', '/inventory')) == 2
+for vendor, listing, price in [(winner, first_listing, 14.5), (loser, second_listing, 23)]:
+    history = vendor.call('GET', '/seller/orders')
+    assert len(history) == 1 and history[0]['id'] == sale['id']
+    detail = vendor.call('GET', '/seller/orders/' + sale['id'])
+    assert detail['total'] == price and len(detail['items']) == 1
+    assert detail['items'][0]['id'] == listing['id'] and 'userId' not in detail
+    assert vendor.call('GET', '/seller/listings')['listings'][0]['sold'] == 1
+winner.call('PUT', first_path, {'price': 16, 'quantity': 1}, 409)
+loser.call('PUT', '/seller/listings/' + second_listing['id'], {'price': 27, 'quantity': 1})
+assert loser.call('GET', '/seller/orders/' + sale['id'])['total'] == 23
+admin.call('DELETE', '/products/' + second_listing['id'], expected=204)
+admin.call('DELETE', '/products/' + second_product['id'], expected=204)
+assert loser.call('GET', '/seller/orders/' + sale['id'])['items'][0]['id'] == second_listing['id']
+market_item = next(item for item in winner.call('GET', '/products') if not item['resale'] and item['stock'] and item['price'] < 1000)
+winner.call('PUT', '/cart/' + market_item['id'], {'quantity': 1})
+seller_purchase = winner.call('POST', '/orders', {'requestKey': 'seller-buyer-' + suffix}, 201)
+assert any(item['orderId'] == seller_purchase['id'] for item in winner.call('GET', '/seller/listings')['inventory'])
 for service in ['usuarios', 'productos', 'pedidos']:
     assert 'paths' in anonymous.call('GET', f'/{service}/openapi')
 Path('tmp/api-smoke-results.json').write_text(json.dumps({'checks': len(checks), 'results': checks, 'concurrent_last_stock': 'passed', 'database': 'MySQL 8.4'}, indent=2), encoding='utf-8')
