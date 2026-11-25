@@ -1,0 +1,9 @@
+services:
+  ms-usuarios:
+    ports: !reset []
+  ms-productos:
+    ports: !reset []
+  ms-pedidos:
+    ports: !reset []
+  web:
+    ports: !override ["127.0.0.1:8088:80"]

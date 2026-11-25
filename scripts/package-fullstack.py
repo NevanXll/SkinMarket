@@ -14,13 +14,13 @@ def allowed(path):
     if path.suffix in {'.log','.pem','.key','.docx'}: return False
     if relative.parts[0]=='docs' and len(relative.parts)==2 and path.name not in docs:return False
     if relative.parts[0]=='output' and path.name not in {'SkinMarket_ERS_FullStack.pdf','SkinMarket_Arquitectura_API.pdf','SkinMarket_Manual_Usuario.pdf','SkinMarket_Informe_Testing.pdf'}:return False
-    if relative.parts[0]=='scripts' and path.name not in {'build-postman.py','build-fullstack-pdf.py','capture-ui.cjs','smoke-api.py','package-fullstack.py','import-catalog.mjs'}:return False
+    if relative.parts[0]=='scripts' and path.name not in {'build-postman.py','build-fullstack-pdf.py','capture-ui.cjs','smoke-api.py','package-fullstack.py','import-catalog.mjs','demo-local.py'}:return False
     return True
 roots = ['src','public','tests','backend','deploy','database','docs','output/pdf','scripts','coverage']
 files=[]
 for root in roots:
     files.extend(p for p in (ROOT/root).rglob('*') if p.is_file() and allowed(p))
-files.extend(p for p in ROOT.iterdir() if p.is_file() and p.name in {'index.html','package.json','package-lock.json','vite.config.js','karma.conf.cjs','README.md','.gitignore','.dockerignore','.env.example','Dockerfile','compose.yaml'})
+files.extend(p for p in ROOT.iterdir() if p.is_file() and p.name in {'index.html','package.json','package-lock.json','vite.config.js','karma.conf.cjs','README.md','.gitignore','.dockerignore','.env.example','Dockerfile','compose.yaml','compose.demo.yaml'})
 files=sorted(set(files))
 def package(name, selection, extra, replacements=None):
     target=out/name
@@ -38,7 +38,7 @@ def package(name, selection, extra, replacements=None):
         assert not any(Path(n).name=='.env' or 'node_modules/' in n or '/target/' in n for n in z.namelist())
     print(target.name,round(target.stat().st_size/1024/1024,2),'MB')
 package('SkinMarket_FullStack.zip',files,'Proyecto completo. Crear .env privado desde .env.example y ejecutar docker compose up -d --build. Ver README.md para la ejecución local y el enlace publicado.\n')
-frontend=[p for p in files if p.relative_to(ROOT).parts[0] not in {'backend','database','deploy','scripts'} and p.name not in {'compose.yaml','Dockerfile','.env.example'}]
+frontend=[p for p in files if p.relative_to(ROOT).parts[0] not in {'backend','database','deploy','scripts'} and p.name not in {'compose.yaml','compose.demo.yaml','Dockerfile','.env.example'}]
 frontend.append(ROOT/'scripts/import-catalog.mjs')
 package('SkinMarket_Frontend.zip',frontend,'Frontend React. Requiere backend activo. npm ci y npm run dev. Vite envía la API a localhost:8081,8082,8083. Para producción, npm run build y configurar un proxy /api/v1 en el servidor. Las pruebas usan npm test.\n')
 backend=[p for p in files if p.relative_to(ROOT).parts[0] in {'backend','database','deploy'} or p.name in {'compose.yaml','.env.example','.dockerignore'}]

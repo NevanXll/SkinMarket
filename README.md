@@ -22,6 +22,24 @@ docker compose stop
 
 MySQL conserva los datos en el volumen `mysql-data`. Detener o reconstruir los contenedores no borra ese volumen.
 
+## Cuentas de demostración
+
+Con Python 3 y Docker Compose 2.24.4 o posterior, ejecuta desde la raíz del repositorio completo:
+
+```bash
+python scripts/demo-local.py
+```
+
+Abre [la tienda de demostración](http://127.0.0.1:8088). Las cuentas se registran en una base local independiente y conservan sus datos al reiniciar.
+
+| Rol | Correo | Contraseña de demostración |
+| --- | --- | --- |
+| Cliente | `cliente.demo@skinmarket.example` | `DemoCliente!2026` |
+| Vendedor | `vendedor.demo@skinmarket.example` | `DemoVendedor!2026` |
+| Administrador | `admin.demo@skinmarket.example` | `DemoAdmin!2026` |
+
+El vendedor empieza con una skin disponible para publicar desde **Panel de vendedor → Publicaciones**. Estas credenciales de ejemplo corresponden únicamente a la tienda local del puerto 8088. Para detenerla y conservar sus datos, ejecuta `python scripts/demo-local.py --stop`.
+
 ## Desarrollo React
 
 Con el backend Docker funcionando, instala Node 22.18+ o 24.11+:
