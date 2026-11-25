@@ -134,7 +134,7 @@ export default function Layout({ children }) {
           Tu próximo loadout empieza aquí.
           <br />
           <small>
-            Proyecto académico · Compras y saldo simulados · Sin afiliación con
+            Compras y saldo simulados · Sin afiliación con
             Valve.
           </small>
         </p>

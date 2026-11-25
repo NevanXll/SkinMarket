@@ -1,12 +1,12 @@
 # Especificación de requisitos de SkinMarket Pro
 
-Versión 3.3 - React, Spring Boot y MySQL. Fecha: 24 de noviembre de 2026.
+Versión 3.4 · React, Spring Boot y MySQL · 24 de noviembre de 2026.
 
 ## 1. Introducción
 
 ### 1.1 Propósito
 
-Definir el comportamiento y las restricciones de una tienda académica de skins de Counter-Strike 2. Los destinatarios son desarrolladores, evaluadores y usuarios que verifican el proyecto. La organización sigue la estructura de introducción, descripción general y requisitos específicos de una ERS.
+Este documento define el comportamiento y las restricciones de SkinMarket Pro, una tienda de skins de Counter-Strike 2 con compras simuladas. Está dirigido a quienes desarrollan, mantienen o prueban la aplicación.
 
 ### 1.2 Alcance
 
@@ -18,17 +18,17 @@ Skin: apariencia digital de un objeto del juego. CRUD: crear, leer, actualizar y
 
 ### 1.4 Referencias
 
-Rúbricas EP3 y EFT de DSY1104 suministradas para esta evaluación; guías docentes de integración React, REST y despliegue EC2; repositorios Fideito14/RestaurantEV2 y jesvargasf/dsy1104_microservicios como referencias de estructura; ByMykel/CSGO-API como origen de información e imágenes del catálogo. La implementación concreta se describe en Arquitectura_API.md y las verificaciones en Informe_Testing.md.
+ByMykel/CSGO-API proporciona los datos e imágenes iniciales del catálogo. La arquitectura y los contratos REST se describen en Arquitectura_API.md. El informe Informe_Testing.md registra las pruebas realizadas.
 
 ### 1.5 Organización
 
-La sección 2 define actores, contexto y límites. La sección 3 especifica interfaces, funciones, reglas y atributos de calidad. Los anexos describen casos de uso y la trazabilidad de la evaluación.
+La sección 2 define actores, contexto y límites. La sección 3 especifica interfaces, funciones, reglas y atributos de calidad. Los anexos describen los casos de uso y cómo verificar los requisitos.
 
 ## 2. Descripción general
 
 ### 2.1 Perspectiva
 
-Aplicación web cliente-servidor. React y Bootstrap consumen tres aplicaciones Spring Boot: usuarios/autenticación, productos y pedidos. Comparten una base MySQL para confirmar compras de forma atómica. Esta es una simplificación académica y no corresponde a bases aisladas por microservicio. Un proxy mantiene la web y la API bajo el mismo origen.
+La interfaz web usa React y Bootstrap. Un proxy conecta la web con tres aplicaciones Spring Boot que manejan cuentas y sesiones, productos y pedidos. Estas comparten una base MySQL para confirmar compras de forma atómica. La web y la API usan el mismo origen.
 
 ### 2.2 Actores
 
@@ -36,7 +36,7 @@ Visitante: consulta catálogo y detalle, se registra e inicia sesión. CLIENTE: 
 
 ### 2.3 Restricciones y dependencias
 
-El servicio requiere conectividad con la API y MySQL; no existe modo de compra sin conexión. Docker Compose permite ejecución local. Para URL pública se requiere un servidor del laboratorio y configuración HTTPS. La disponibilidad depende del laboratorio, del servidor y de la base. Los recursos visuales locales se incluyen en la compilación. Java 21 se utiliza en backend; Node y npm compilan React.
+El servicio requiere conectividad con la API y MySQL. Docker Compose permite ejecutarlo localmente. El acceso público requiere un servidor en ejecución y un proxy configurado con HTTPS. Los recursos visuales locales se incluyen en la compilación. El backend utiliza Java 21 y la compilación de React usa Node.js y npm.
 
 ### 2.4 Suposiciones y evolución
 
@@ -78,13 +78,11 @@ RF-13 Solicitud del rol Vendedor. Un CLIENTE autenticado indica su motivo, si es
 
 RF-14 Publicaciones y ventas. VENDEDOR selecciona una skin adquirida con su cuenta, fija precio en USD y cantidad. Puede editar o pausar la publicación dentro de su disponibilidad. Una compra descuenta stock, acredita la skin en el inventario de la cuenta compradora y registra las líneas de venta correspondientes. El historial conserva su precio original. El panel muestra importe vendido, pedidos, unidades, publicaciones activas y ventas de siete días. Cada vendedor solo consulta sus propias líneas.
 
-RF-14 Panel de vendedor. El vendedor puede listar productos, consultar su detalle, listar órdenes y consultar su detalle. Las operaciones de compra y de administración se restringen en la interfaz y en el servidor.
-
 RF-15 Perfil. Cada cuenta autenticada puede cambiar su nombre visible, foto o avatar y biografía. La ubicación y fecha de nacimiento son opcionales. MySQL conserva los datos y las preferencias para mostrar el correo, fecha de nacimiento y ubicación en el resumen, y el nombre y saldo en el encabezado. El servicio valida la foto y la fecha. Editar el perfil mantiene el rol de la cuenta.
 
 ### 3.3 Diseño lógico de datos
 
-accounts registra cuentas con email único, hash, rol, bloqueo, saldo y versión de autorización. products registra catálogo y baja lógica. cart_items relaciona una cuenta y producto con cantidad única por par. purchases referencia cuenta, fecha, total, clave idempotente e instantánea JSON. refresh_sessions referencia cuenta, hash, vencimiento y versión. seller_applications relaciona la cuenta postulante con su formulario y estado de revisión. Claves foráneas y restricciones CHECK/UNIQUE complementan las validaciones. Flyway versiona la estructura y carga el catálogo inicial.
+`accounts` registra cuentas, credenciales protegidas, permisos y saldo. `products` registra el catálogo, las bajas lógicas y el lote de origen de cada publicación. `cart_items` mantiene una fila por par de cuenta y producto. `purchases` registra pedidos, claves idempotentes e instantáneas de los artículos. `seller_sales` almacena las líneas de venta por vendedor con el precio original. `seller_applications` conserva las solicitudes de rol y su estado. `wallet_packages` contiene los paquetes de saldo y su precio, y `wallet_top_ups` registra las claves para evitar recargas duplicadas. `refresh_sessions` registra las sesiones renovables. Las claves foráneas y restricciones de integridad complementan las validaciones. Flyway versiona el esquema y carga los datos iniciales.
 
 ### 3.4 Requisitos no funcionales
 
@@ -94,9 +92,9 @@ RNF-02 Integridad: transacciones y bloqueos pesimistas protegen saldo y stock; c
 
 RNF-03 Usabilidad: navegación consistente, avisos claros, formularios etiquetados, foco en diálogos y controles adaptados al tamaño de pantalla. La vista móvil debe permitir comprar sin desbordamiento horizontal de página.
 
-RNF-04 Pruebas: mínimo diez pruebas significativas Jasmine/Karma con informe de cobertura y umbral de 60% en líneas, sentencias, funciones y ramas del frontend evaluable. Pruebas de backend y comprobaciones HTTP con MySQL complementan las unitarias.
+RNF-04 Pruebas. La configuración de Jasmine/Karma exige al menos 60% de cobertura en líneas, sentencias, funciones y ramas del frontend. Las pruebas de backend y las comprobaciones HTTP con MySQL verifican las reglas de negocio y la persistencia.
 
-RNF-05 Despliegue y operación: ejecución reproducible mediante Compose, health checks y datos persistidos en volumen. La URL pública debe permitir los flujos desde otro equipo una vez desplegada. No se establece un SLA de disponibilidad ni una carga concurrente garantizada para el laboratorio.
+RNF-05 Despliegue y operación. Docker Compose permite iniciar los servicios con comprobaciones de salud y persistencia mediante volúmenes. La URL pública permite ejecutar los flujos desde otro equipo mientras la instancia de Amazon EC2 permanezca activa.
 
 RNF-06 Mantenibilidad: separación de páginas/componentes/contexto/cliente HTTP en React y controller/service/repository/model/DTO/security en backend. Configuración por variables de entorno, OpenAPI, colección Postman y respaldo SQL importable.
 
@@ -104,7 +102,7 @@ RNF-06 Mantenibilidad: separación de páginas/componentes/contexto/cliente HTTP
 
 CU-01 Registrarse. Actor: visitante. Precondición: conexión disponible. Flujo: abre Acceso, selecciona registro, ingresa datos, revisa validaciones y confirma; servidor crea CLIENTE y sesión. Alternativas: campos inválidos o correo duplicado muestran error. Resultado: cuenta persistida y acceso al mercado.
 
-CU-02 Comprar. Actor: CLIENTE o ADMIN. Precondición: sesión válida y carrito con artículos. Flujo: revisa cantidades y total, confirma, servidor bloquea registros, valida, confirma transacción y presenta inventario. Alternativas: saldo/stock insuficiente, cuenta bloqueada o desconexión; no se confirma una compra parcial. Resultado: pedido persistido con saldo y stock actualizados.
+CU-02 Comprar. Actores disponibles: CLIENTE, VENDEDOR y ADMIN. Con una sesión válida y un carrito con artículos, el usuario revisa cantidades y total y confirma la compra. El servidor bloquea los registros, comprueba el saldo y el stock, guarda el pedido y actualiza el inventario. Si alguna regla falla, el servidor revierte la operación completa.
 
 CU-03 Administrar producto. Actor: ADMIN. Flujo: abre Productos, crea o edita campos y guarda; para eliminar confirma la acción. Alternativas: entrada inválida devuelve errores; producto inexistente devuelve 404. Resultado: catálogo actualizado en MySQL y frontend.
 
@@ -116,6 +114,6 @@ CU-06 Solicitar rol Vendedor. El cliente abre Ser vendedor, completa el formular
 
 CU-07 Publicar skin. El vendedor abre Publicaciones, elige una skin de su inventario, ingresa precio y cantidad, y confirma. El servidor verifica titularidad y unidades. La publicación activa aparece en el catálogo. Si otra cuenta compra la skin, la venta aparece en el panel y en su historial.
 
-## Anexo B Trazabilidad de evaluación
+## Anexo B Verificación de requisitos
 
-Login y seguridad: RF-01, RF-02, RF-03 y RNF-01. CRUD REST de productos: RF-04 y RF-05. CRUD usuarios: RF-06. Integración React/API/MySQL: RF-07 a RF-12. Pruebas y cobertura: RNF-02 y RNF-04. Despliegue público: RNF-05, con configuración de nube pendiente de ejecutar. Documentación, OpenAPI, Postman y SQL: RNF-06. Los resultados efectivamente ejecutados se registran en Informe_Testing.md.
+Las pruebas de autenticación y permisos cubren RF-01 a RF-03 y RNF-01. Las pruebas de catálogo y cuentas cubren RF-04 a RF-06. Las comprobaciones HTTP y el recorrido desde el navegador cubren carrito, compras, inventario, recargas, ventas, perfil y persistencia (RF-07 a RF-15). El informe de pruebas recoge los resultados de cobertura, concurrencia y despliegue público (RNF-02 a RNF-05). Los contratos OpenAPI, la colección Postman y el respaldo SQL documentan las interfaces y los datos descritos en RNF-06.

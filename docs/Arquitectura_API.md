@@ -4,7 +4,7 @@
 
 React consume `/api/v1` mediante `src/services/api.js`. Nginx o el proxy de Vite envía autenticación/usuarios a ms-usuarios, productos a ms-productos y carrito/pedidos a ms-pedidos. Los controladores validan DTO, los servicios aplican reglas y los repositorios JPA acceden a MySQL. Una respuesta fallida se convierte en un aviso visible; el frontend no confirma una acción antes de recibir la respuesta.
 
-La estructura toma como referencia las capas controller/service/repository/model de RestaurantEV2 y la separación entre productos y pedidos del ejemplo docente. El proxy HTTP dirige las rutas a tres aplicaciones Spring Boot que comparten MySQL.
+El backend organiza cada aplicación en controladores y servicios, con entidades y repositorios compartidos. El proxy HTTP dirige las rutas a tres aplicaciones Spring Boot que usan la misma base MySQL.
 
 En `ms-productos`, el paquete `controller` define los endpoints del catálogo, `dto/ProductInput` contiene los campos y validaciones de alta y edición, y `service/ProductService` aplica las reglas del catálogo. `Product` y su repositorio permanecen en `common` porque pedidos también los usa para validar y actualizar el stock al confirmar una compra.
 

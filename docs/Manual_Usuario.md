@@ -2,7 +2,7 @@
 
 ## Acceso
 
-Abrir la dirección publicada o http://localhost:8080 en el equipo donde se ejecuta Docker. Home presenta skins destacadas; Mercado muestra el catálogo. Se pueden filtrar por texto, tipo de arma, rareza, colección, exterior y precio, además de ordenar. El selector USD/CLP cambia la presentación a una tasa académica fija de 950 CLP por USD.
+Abre la dirección publicada o http://localhost:8080 en el equipo donde se ejecuta Docker. Inicio presenta las skins destacadas y Mercado muestra el catálogo. Puedes ordenar y filtrar por texto, tipo de arma, rareza, colección, exterior y precio. El selector USD/CLP aplica una tasa fija de demostración de 950 CLP por USD.
 
 **Figura 1. Inicio y catálogo**
 
@@ -128,4 +128,4 @@ Abre **Recargas** en **Administración**, cambia el precio en USD de un paquete 
 
 ## Alcance
 
-Las skins, los precios y el saldo tienen finalidad académica. No se integran Steam, inventarios reales ni pasarelas bancarias. El laboratorio debe estar activo para que el enlace público funcione.
+Las compras y el saldo son simulados. El enlace público funciona mientras el servidor permanezca en ejecución y conserve su dirección IP.

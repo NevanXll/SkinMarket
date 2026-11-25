@@ -50,7 +50,7 @@ Vite publica su URL en la terminal y redirige `/api/v1` a los servicios locales.
 | `docs` | ERS, arquitectura, manual, colección Postman y pruebas |
 | `legacy` | Maqueta HTML inicial de referencia |
 
-Cada servicio organiza su código por controller y service. La biblioteca common concentra model, repository, dto, exception y security. Los servicios son aplicaciones independientes que comparten una base MySQL para confirmar saldo, stock y pedido en una transacción ACID. Es una simplificación académica; no son microservicios con bases aisladas.
+Cada servicio organiza su código por controller y service. La biblioteca common concentra model, repository, dto, exception y security. Las aplicaciones comparten una base MySQL para confirmar saldo, stock y pedido en una transacción ACID.
 
 ## Seguridad y compras
 
@@ -62,7 +62,7 @@ El cliente solicita el rol desde **Mi perfil → Ser vendedor**. Tras la aprobac
 
 El servidor valida datos con Bean Validation, obtiene precios desde MySQL y comprueba saldo y stock. Bloquea las filas durante la compra y usa una clave de solicitud para impedir un doble cargo al reintentar. Los pedidos guardan una copia del producto comprado. Eliminar un producto lo retira del catálogo y conserva el historial. Las cuentas con compras no se eliminan; se pueden bloquear.
 
-`localStorage` solo conserva la moneda preferida. 1 USD = 950 CLP es una tasa académica de presentación; precios y operaciones internas usan USD. No se procesan pagos reales ni intercambios con Steam.
+`localStorage` solo conserva la moneda preferida. La interfaz convierte USD a CLP con una tasa fija de demostración de 950 CLP por USD. Los precios y las operaciones internas usan USD. No se procesan pagos reales ni intercambios con Steam.
 
 ## Pruebas y API
 
@@ -77,7 +77,7 @@ En Windows, usa `mvnw.cmd test`. Se requiere JDK 21 para las pruebas Java. El in
 
 Swagger: http://localhost:8080/api/v1/usuarios/swagger-ui.html. Para productos y pedidos cambia `usuarios` por `productos` o `pedidos`. Importa `docs/postman/SkinMarket.postman_collection.json` y el entorno de ejemplo; introduce credenciales privadas en Postman.
 
-## Documentación y entrega
+## Documentación
 
 - [Repositorio de los servicios Spring Boot](https://github.com/NevanXll/SkinMarket-Backend).
 - `docs/ERS_SkinMarket_FullStack.md`: requisitos actuales.
@@ -88,6 +88,6 @@ Swagger: http://localhost:8080/api/v1/usuarios/swagger-ui.html. Para productos y
 - `deploy/README.md`: despliegue, configuración y respaldo.
 - `database/skinmarket.sql`: respaldo de estructura y catálogo, sin cuentas ni sesiones privadas.
 
-La versión integrada funciona en una instancia EC2 de AWS Academy con Docker Compose y un proxy HTTPS. La URL depende de que la instancia conserve su IPv4 pública y siga en ejecución.
+La versión integrada funciona en una instancia Amazon EC2 con Docker Compose y un proxy HTTPS. La URL depende de que la instancia conserve su IPv4 pública y siga en ejecución.
 
-Los DOCX y la ERS V2 conservados en el repositorio describen versiones anteriores; para esta entrega usa la documentación FullStack. Los datos iniciales del catálogo proceden de [ByMykel/CSGO-API](https://github.com/ByMykel/CSGO-API); las imágenes pertenecen a sus titulares. Precios y stock son ficticios. Referencias de estructura: [RestaurantEV2](https://github.com/Fideito14/RestaurantEV2) y [dsy1104_microservicios](https://github.com/jesvargasf/dsy1104_microservicios).
+Los datos iniciales del catálogo proceden de [ByMykel/CSGO-API](https://github.com/ByMykel/CSGO-API). Las imágenes pertenecen a sus titulares. El stock y los precios iniciales son simulados.
