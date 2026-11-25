@@ -51,7 +51,7 @@ function PublishSkin({ inventory, onPublish, pending, error, onCancel }) {
       </label>
       {skin && <div className="seller-skin-preview">
         <img src={imageUrl(skin.image)} alt="" />
-        <div><strong>{skin.name}</strong><p className="muted">{skin.quantity} disponibles en esta compra</p></div>
+        <div><strong>{skin.name}</strong><p className="muted">{skin.quantity} {skin.quantity === 1 ? "unidad disponible" : "unidades disponibles"} en esta compra</p></div>
       </div>}
       <div className="seller-listing-fields">
         <ListingInput label="Precio por unidad en USD" value={price} onChange={setPrice}

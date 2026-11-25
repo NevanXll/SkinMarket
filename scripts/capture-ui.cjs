@@ -1,6 +1,7 @@
 // Verificación de navegador opcional. Instalar Playwright o indicar PLAYWRIGHT_MODULE_DIR.
 const { chromium } = require(require.resolve('playwright', { paths: [process.env.PLAYWRIGHT_MODULE_DIR || process.cwd()] }));
 const fs = require('node:fs');
+const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 (async () => {
@@ -10,8 +11,9 @@ const assert = require('node:assert/strict');
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  fs.mkdirSync('docs/screenshots', { recursive: true });
-  const shot = (name, fullPage = false) => page.screenshot({ path: `docs/screenshots/${name}.png`, fullPage });
+  const screenshots = process.env.SKINMARKET_SCREENSHOTS || 'docs/screenshots';
+  fs.mkdirSync(screenshots, { recursive: true });
+  const shot = (name, fullPage = false) => page.screenshot({ path: path.join(screenshots, name + '.png'), fullPage });
   try {
     await page.goto('http://localhost:8080/');
     await page.getByRole('heading', { name: /LAS MEJORES/ }).waitFor();
@@ -151,8 +153,11 @@ const assert = require('node:assert/strict');
 
     await page.reload();
     await page.getByRole('heading', { name: 'Mis ventas de los últimos 7 días' }).waitFor();
+    const metrics = page.locator('.seller-metrics');
+    assert.equal(await metrics.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length), 4);
     await shot('10-vendedor');
     await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await metrics.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length), 2);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'El panel de vendedor desborda en móvil');
     await page.getByRole('button', { name: 'Historial de ventas', exact: true }).click();
     await page.getByRole('link', { name: 'Ver detalle', exact: true }).first().click();
