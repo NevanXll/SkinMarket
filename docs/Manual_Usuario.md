@@ -78,13 +78,21 @@ Con una cuenta ADMIN, abre **Administración → Solicitudes de vendedor**. Revi
 
 Nota. El administrador puede abrir el formulario y registrar su decisión.
 
-Cuando la solicitud se apruebe, selecciona **Abrir panel de vendedor**. Usa las pestañas Productos y Órdenes para consultar sus listados. Abre una skin o selecciona **Ver detalle** en la orden que quieras consultar. El panel es de solo lectura.
+Cuando la solicitud se apruebe, selecciona **Abrir panel de vendedor**. En **Resumen** verás el importe de tus ventas simuladas, pedidos, unidades vendidas, publicaciones activas y un gráfico de los últimos siete días.
 
-**Figura 9. Detalle de orden en la vista de vendedor**
+**Figura 9. Resumen del vendedor**
 
-![Detalle de orden en la vista de vendedor](screenshots/10-vendedor.png)
+![Resumen del vendedor](screenshots/10-vendedor.png)
 
-Nota. El detalle muestra la fecha, los artículos y el total de la orden.
+El resumen se calcula con tus ventas confirmadas. Abre **Historial de ventas** y pulsa **Ver detalle** para ver tus skins y sus importes en la orden.
+
+En **Publicaciones**, pulsa **Publicar skin** y selecciona una opción de **Skin de mi inventario**. Ingresa el precio unitario en USD y la cantidad. La lista muestra tus compras disponibles y puedes seguir comprando skins desde el mercado.
+
+**Figura 9a. Selección de una skin para vender**
+
+![Selector de skins del inventario](screenshots/13-publicacion.png)
+
+Las publicaciones activas aparecen en el mercado. Para ajustar precio o unidades, abre tu publicación y guarda. Puedes pausarla y reactivarla mientras te queden unidades.
 
 ## Uso móvil y errores
 
@@ -114,7 +122,9 @@ Pulsa el botón de saldo en el encabezado. Cada opción indica el saldo virtual 
 
 ![Opciones de recarga](screenshots/12-recarga.png)
 
-En **Administración → Recargas**, cambia el precio en USD de un paquete y pulsa **Guardar precio**. El cambio se guarda en MySQL. La cantidad de saldo del paquete se mantiene fija y la tienda usa la tasa de 950 CLP por USD para mostrar el equivalente.
+Cada paquete muestra el saldo que entrega y el precio simulado.
+
+Abre **Recargas** en **Administración**, cambia el precio en USD de un paquete y pulsa **Guardar precio**. El cambio se guarda en MySQL. La cantidad de saldo del paquete se mantiene fija y la tienda usa la tasa de 950 CLP por USD para mostrar el equivalente.
 
 ## Alcance
 

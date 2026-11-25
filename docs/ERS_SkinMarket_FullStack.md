@@ -32,7 +32,7 @@ Aplicación web cliente-servidor. React y Bootstrap consumen tres aplicaciones S
 
 ### 2.2 Actores
 
-Visitante: consulta catálogo y detalle, se registra e inicia sesión. CLIENTE: usa su carrito, recarga saldo virtual, compra, consulta su inventario e historial y puede postular a vendedor. VENDEDOR: consulta productos y órdenes en modo de solo lectura. ADMIN: dispone de las funciones de compra, administra productos y cuentas, revisa postulaciones y consulta pedidos agregados. El servidor comprueba roles y bloqueos en cada solicitud protegida.
+Visitante: consulta catálogo y detalle, se registra e inicia sesión. CLIENTE: usa su carrito, recarga saldo virtual, compra, consulta su inventario e historial y puede postular a vendedor. VENDEDOR: conserva las funciones de compra y gestiona sus propias publicaciones y ventas. ADMIN: dispone de las funciones de compra, administra productos y cuentas, revisa postulaciones y consulta pedidos agregados. El servidor comprueba roles y bloqueos en cada solicitud protegida.
 
 ### 2.3 Restricciones y dependencias
 
@@ -54,7 +54,7 @@ RF-01 Registro. El visitante ingresa nombre, email y contraseña. El sistema exi
 
 RF-02 Autenticación. El sistema compara la contraseña recibida con BCrypt; no entrega hashes al frontend. Cuenta inexistente, contraseña incorrecta o bloqueo producen rechazo. Un acceso válido entrega JWT con vigencia de 15 minutos y cookie de renovación de siete días. La renovación rota el token opaco almacenado en forma de hash. El cierre revoca la renovación y elimina la sesión visible. Bloqueo o cambio de versión invalidan el acceso existente.
 
-RF-03 Autorización. ADMIN gestiona usuarios, modifica productos y revisa postulaciones. Las compras y los recursos personales de la tienda se habilitan a CLIENTE y ADMIN. VENDEDOR consulta productos y órdenes en su panel de solo lectura. La API devuelve 401 cuando falta autenticación y 403 cuando el rol es insuficiente.
+RF-03 Autorización. ADMIN gestiona usuarios, modifica productos y revisa postulaciones. Las compras y los recursos personales de la tienda se habilitan a los roles con sesión activa. El panel de publicaciones y ventas propias se habilita a VENDEDOR. La API devuelve 401 cuando falta autenticación y 403 cuando el rol es insuficiente.
 
 RF-04 Catálogo. El visitante lista y consulta el detalle de productos activos provenientes de MySQL. Puede filtrar por texto, categoría, rareza, colección, exterior y rango de precios y ordenar por precio o nombre. La búsqueda elimina caracteres no admitidos; precios de filtro no negativos y mínimo no mayor al máximo. Producto inexistente o retirado: 404. Si la API falla, se informa el error sin sustituirla por catálogo estático.
 
@@ -75,6 +75,8 @@ RF-11 Dashboard. ADMIN consulta ventas totales, cantidad de pedidos, unidades, t
 RF-12 Errores y persistencia. Toda operación confirmada permanece tras recargar o reiniciar servicios conservando el volumen MySQL. La interfaz informa éxito, validación, falta de permisos, conflicto o desconexión. No almacena contraseñas, JWT de acceso ni bases de usuarios en localStorage.
 
 RF-13 Solicitud del rol Vendedor. Un CLIENTE autenticado indica su motivo, si estudia, país, estado o región y ciudad. Puede añadir experiencia, institución educativa y código postal según corresponda. El servidor persiste la solicitud visible para el titular y ADMIN. La aprobación registra la decisión y asigna VENDEDOR en una transacción. El rechazo exige una explicación y permite un nuevo envío.
+
+RF-14 Publicaciones y ventas. VENDEDOR selecciona una skin adquirida con su cuenta, fija precio en USD y cantidad. Puede editar o pausar la publicación dentro de su disponibilidad. Una compra descuenta stock, acredita la skin en el inventario de la cuenta compradora y registra las líneas de venta correspondientes. El historial conserva su precio original. El panel muestra importe vendido, pedidos, unidades, publicaciones activas y ventas de siete días. Cada vendedor solo consulta sus propias líneas.
 
 RF-14 Panel de vendedor. El vendedor puede listar productos, consultar su detalle, listar órdenes y consultar su detalle. Las operaciones de compra y de administración se restringen en la interfaz y en el servidor.
 
@@ -110,7 +112,9 @@ CU-04 Administrar cuenta. Actor: ADMIN. Flujo: abre Usuarios, busca, crea o edit
 
 CU-05 Recuperar sesión. Actor: usuario que recarga. Precondición: cookie válida. Flujo: React solicita refresh, servidor verifica hash/vencimiento/versión y rota cookie, React carga perfil, carrito e historial. Alternativa: sesión inválida lleva a acceso sin exponer datos privados.
 
-CU-06 Solicitar rol Vendedor. El cliente abre Ser vendedor, completa el formulario y lo envía. El administrador abre Solicitudes de vendedor y registra su decisión. El cliente actualiza el estado. Una aprobación habilita el panel de productos y órdenes. Un rechazo muestra el comentario y permite enviar otra solicitud.
+CU-06 Solicitar rol Vendedor. El cliente abre Ser vendedor, completa el formulario y lo envía. El administrador abre Solicitudes de vendedor y registra su decisión. El cliente actualiza el estado. Una aprobación habilita el panel de publicaciones y ventas. Un rechazo muestra el comentario y permite enviar otra solicitud.
+
+CU-07 Publicar skin. El vendedor abre Publicaciones, elige una skin de su inventario, ingresa precio y cantidad, y confirma. El servidor verifica titularidad y unidades. La publicación activa aparece en el catálogo. Si otra cuenta compra la skin, la venta aparece en el panel y en su historial.
 
 ## Anexo B Trazabilidad de evaluación
 

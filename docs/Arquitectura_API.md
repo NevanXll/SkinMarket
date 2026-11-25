@@ -39,10 +39,10 @@ Prefijo `/api/v1`. Respuestas de error incluyen `message`; errores de campos inc
 | GET/PUT/DELETE /admin/users/{id} | ADMIN | 200 detalle/edición o 204 eliminación |
 | GET /cart | Autenticado | 200, carrito propio |
 | PUT /cart/{productId} | Autenticado | 200; quantity=0 elimina línea |
-| GET /wallet/packages | ADMIN, CLIENTE | 200, paquetes con saldo fijo y precio simulado en USD |
+| GET /wallet/packages | Autenticado | 200, paquetes con saldo fijo y precio simulado en USD |
 | PUT /admin/wallet/packages/{id} | ADMIN | 200, cambia solo el precio; 400 si está fuera de rango; 404 si el paquete no existe |
-| POST /wallet/packages/{id}/top-up | ADMIN, CLIENTE | 200, acredita saldo virtual; 409 si el precio cambió o la clave de solicitud pertenece a otro paquete |
-| POST /wallet/top-up | ADMIN, CLIENTE | 200, recarga virtual directa para los clientes que usan esta operación |
+| POST /wallet/packages/{id}/top-up | Autenticado | 200, acredita saldo virtual; 409 si el precio cambió o la clave de solicitud pertenece a otro paquete |
+| POST /wallet/top-up | Autenticado | 200, recarga virtual directa para los clientes que usan esta operación |
 | POST /orders | Autenticado | 201, compra con requestKey |
 | GET /orders | Autenticado | 200, compras propias |
 | GET /orders/{id} | Dueño o ADMIN | 200; impide acceso a compras ajenas |
@@ -52,14 +52,17 @@ Prefijo `/api/v1`. Respuestas de error incluyen `message`; errores de campos inc
 | POST /seller-application | CLIENTE | 201, solicitud pendiente. Otra solicitud pendiente devuelve 409 |
 | GET /admin/seller-applications | ADMIN | 200, solicitudes para revisión |
 | PUT /admin/seller-applications/{userId} | ADMIN | 200, aprobación o rechazo. El rechazo exige un motivo |
-| GET /seller/orders | VENDEDOR o ADMIN | 200, lista de órdenes |
-| GET /seller/orders/{id} | VENDEDOR o ADMIN | 200, detalle de la orden |
+| GET /seller/listings | VENDEDOR | 200, publicaciones propias y skins compradas que se pueden publicar |
+| POST /seller/listings | VENDEDOR | 201, publica un lote adquirido por la cuenta; 404 si el lote es ajeno; 409 si excede las unidades o ya está publicado |
+| PUT /seller/listings/{id} | VENDEDOR | 200, ajusta precio y cantidad de una publicación propia; cantidad 0 pausa la publicación |
+| GET /seller/orders | VENDEDOR | 200, historial con las líneas vendidas por la cuenta |
+| GET /seller/orders/{id} | VENDEDOR | 200, detalle de sus líneas; 404 si la cuenta no participó en la orden |
 
 ## Postulación a vendedor
 
 El cliente indica su motivo, si estudia, país, estado o región y ciudad. Puede añadir experiencia, institución educativa y código postal según corresponda. Spring Boot guarda esos datos en la solicitud. Solo la cuenta solicitante y los administradores pueden consultarla. La aprobación cambia el rol a VENDEDOR en la misma transacción que registra la decisión. Un rechazo permite volver a postular.
 
-Spring Security lee el rol vigente desde la cuenta en cada petición autenticada. Al actualizar el estado, React consulta el perfil y habilita el panel de solo lectura con productos y órdenes.
+Spring Security lee el rol vigente desde la cuenta en cada petición autenticada. Al aprobarse la solicitud, React habilita el panel de publicaciones, ventas y métricas del vendedor. El servidor verifica el inventario por pedido y producto. Una publicación se limita a sus unidades adquiridas menos las unidades vendidas. El precio y la cantidad confirmados quedan registrados por línea de venta en la misma transacción de checkout. El detalle de vendedor muestra solo sus líneas y su subtotal. El administrador puede retirar una publicación desde Productos.
 
 ## Perfil y privacidad
 
@@ -83,7 +86,7 @@ El historial guarda items_json con nombre, precio, imagen y cantidad de cada pro
 | seller_applications | FK y clave por usuario, motivo, experiencia, estudios, país, región, ciudad, código postal, estado y revisión |
 | flyway_schema_history | Migraciones SQL aplicadas |
 
-Flyway V1 crea el esquema, V2 carga 24 productos iniciales y V3 incorpora el rol VENDEDOR. V4 agrega el perfil editable y V5 incorpora fotos, datos de perfil y los campos de estudio y ubicación de la solicitud. El catálogo visible en React proviene de la API REST. Los JSON de `src/data` sirven al importador y a las pruebas.
+Flyway V1 crea el esquema, V2 carga 24 productos iniciales y V3 incorpora la solicitud VENDEDOR. V4 agrega el perfil y los permisos. V5 agrega la foto y los campos de estudio y ubicación. V6 crea los paquetes de recarga. V7 agrega la procedencia de las publicaciones y el registro de ventas por vendedor. El catálogo visible en React proviene de la API REST. Los JSON de `src/data` sirven al importador y a las pruebas.
 
 ## Ubicación de validaciones
 
@@ -91,7 +94,7 @@ Validaciones visuales: `src/lib/market.js` (validateAuth y validateProduct), `sr
 
 ## Pruebas de integración y resultados
 
-El 24 de noviembre de 2026 se ejecutaron 62 comprobaciones HTTP desde el proxy local hacia los servicios Spring Boot y MySQL 8.4. El recorrido verificó autenticación, CRUD, renovación, perfil, compra, rechazo y aprobación de solicitudes, consulta de órdenes y restricciones por rol. La prueba de concurrencia confirmó que una sola petición compra la última unidad y el reintento con la misma clave devuelve el pedido ya guardado.
+El 24 de noviembre de 2026 se ejecutaron 118 comprobaciones HTTP desde el proxy local hacia Spring Boot y MySQL 8.4. Se verificaron las operaciones de compra, recarga, edición de publicaciones y acceso a ventas propias. Dos peticiones compitieron por la última unidad y solo una completó la compra. Reintentar con la misma clave devolvió el pedido original.
 
 El recorrido en navegador comprobó que React recupera la sesión al recargar y muestra los datos guardados en MySQL al abrir el inventario. Tras aprobar la postulación, la sesión de vendedor muestra las vistas de productos y órdenes. El informe de pruebas detalla los comandos, sus resultados y el alcance local.
 

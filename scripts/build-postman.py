@@ -71,11 +71,20 @@ add('6 Vendedor', 'Aprobar solicitud', 'PUT', '/admin/seller-applications/{{appl
     body={'approved': True, 'note': 'Solicitud revisada.'})
 add('6 Vendedor', 'Login VENDEDOR', 'POST', '/auth/login',
     body={'email': '{{client_email}}', 'password': '{{client_password}}'}, auth=False, save=save_token)
-add('6 Vendedor', 'Listar órdenes', 'GET', '/seller/orders',
+add('6 Vendedor', 'Consultar skins adquiridas y publicaciones', 'GET', '/seller/listings',
+    save='const lot = pm.response.json().inventory?.[0]; if (lot) { pm.environment.set("seller_order_id", lot.orderId); pm.environment.set("seller_product_id", lot.productId); }')
+add('6 Vendedor', 'Publicar una skin adquirida', 'POST', '/seller/listings', 201,
+    {'orderId': '{{seller_order_id}}', 'productId': '{{seller_product_id}}', 'price': 25, 'quantity': 1},
+    save='if (pm.response.code === 201) pm.environment.set("seller_listing_id", pm.response.json().id);')
+add('6 Vendedor', 'Ajustar precio de una publicación', 'PUT', '/seller/listings/{{seller_listing_id}}',
+    body={'price': 27, 'quantity': 1})
+add('6 Vendedor', 'Pausar una publicación', 'PUT', '/seller/listings/{{seller_listing_id}}',
+    body={'price': 27, 'quantity': 0})
+add('6 Vendedor', 'Listar mis ventas', 'GET', '/seller/orders',
     save='if (pm.response.code === 200 && pm.response.json().length) pm.environment.set("order_id", pm.response.json()[0].id);')
-add('6 Vendedor', 'Detalle de orden', 'GET', '/seller/orders/{{order_id}}')
+add('6 Vendedor', 'Detalle de una venta realizada', 'GET', '/seller/orders/{{order_id}}')
 collection = {'info': {'name': 'SkinMarket Full Stack', 'schema': 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json', 'description': 'Requiere servidor activo y entorno privado. Ejecutar por grupos. Los cambios de compra son persistentes y el saldo es virtual.'}, 'item': [{'name': name, 'item': items} for name, items in groups.items()]}
-values = {'base_url': 'http://localhost:8080/api/v1', 'client_email': '', 'client_password': '', 'admin_email': '', 'admin_password': '', 'managed_email': '', 'access_token': '', 'product_id': '', 'managed_product_id': '', 'managed_user_id': '', 'order_id': '', 'applicant_id': '', 'wallet_price': ''}
+values = {'base_url': 'http://localhost:8080/api/v1', 'client_email': '', 'client_password': '', 'admin_email': '', 'admin_password': '', 'managed_email': '', 'access_token': '', 'product_id': '', 'managed_product_id': '', 'managed_user_id': '', 'order_id': '', 'applicant_id': '', 'wallet_price': '', 'seller_order_id': '', 'seller_product_id': '', 'seller_listing_id': ''}
 environment = {'name': 'SkinMarket local ejemplo', 'values': [{'key': k, 'value': v, 'type': 'secret' if 'password' in k or k == 'access_token' else 'default', 'enabled': True} for k,v in values.items()], '_postman_variable_scope': 'environment'}
 target = Path('docs/postman'); target.mkdir(parents=True, exist_ok=True)
 for name, content in [('SkinMarket.postman_collection.json', collection), ('SkinMarket.postman_environment.json', environment)]:

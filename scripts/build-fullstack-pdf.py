@@ -50,7 +50,8 @@ def build(source,target):
                 cells=[c.strip() for c in lines[i].strip().strip('|').split('|')]
                 if not all(re.fullmatch(r'[-: ]+',c) for c in cells):rows.append([para(c,'CellSM') for c in cells])
                 i+=1
-            widths=[55*mm,115*mm] if len(rows[0])==2 else [64*mm,47*mm,59*mm]
+            widths={2:[55,115], 3:[64,47,59], 4:[55,40,35,40]}[len(rows[0])]
+            widths=[width*mm for width in widths]
             table=Table(rows,colWidths=widths,repeatRows=1,hAlign='LEFT')
             table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#eae2f6')),('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f7f8fa')]),('VALIGN',(0,0),(-1,-1),'TOP'),('TOPPADDING',(0,0),(-1,-1),6),('BOTTOMPADDING',(0,0),(-1,-1),6)]))
             story.extend([table,Spacer(1,10)]);continue
