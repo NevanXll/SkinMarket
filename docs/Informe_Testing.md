@@ -21,7 +21,7 @@ Informe navegable: `coverage/index.html`. Datos: `coverage/coverage-summary.json
 
 ## Backend
 
-Comando con Java 21: `backend/mvnw.cmd -f backend/pom.xml test` en Windows o `./mvnw test` desde backend en Linux. Pasaron **22 pruebas**. Trece corresponden a autenticación, permisos y aprobación de vendedor, dos a la API de productos y siete a pedidos.
+Comando con Java 21: `backend/mvnw.cmd -f backend/pom.xml test` en Windows o `./mvnw test` desde backend en Linux. Pasaron **23 pruebas**. Catorce corresponden a autenticación, permisos, aprobación de vendedor y acceso a Swagger, dos a la API de productos y siete a pedidos.
 
 Las pruebas de integración Spring usan H2 en modo MySQL únicamente como entorno de prueba aislado. Verifican hash BCrypt sin exposición de contraseña, registro inválido, correo duplicado, renovación rotatoria, cierre, autorización ADMIN, protección de origen/cabecera, bloqueo, límite UTF-8 de contraseña, compra, rollback por saldo y stock, idempotencia y acceso a pedidos ajenos. La aplicación en ejecución utiliza MySQL, no H2.
 
@@ -45,6 +45,6 @@ Se ejecutó `scripts/capture-ui.cjs` con Chrome y Playwright. Se comprobó el re
 
 La compilación de React y los tres servicios finalizó correctamente. Compose levantó MySQL 8.4, Spring Boot y Nginx. El respaldo `database/skinmarket.sql` se restauró en un esquema de verificación con 24 productos, cero cuentas, cero solicitudes y tres migraciones Flyway.
 
-## Alcance pendiente
+## Verificación en AWS
 
-Los resultados corresponden al entorno local. La publicación y la comprobación de una URL pública siguen pendientes.
+La versión integrada se publicó en https://44.200.240.238/ sobre Amazon EC2 en us-east-1. Desde un equipo externo se verificaron el certificado público HTTPS, el catálogo, el registro, la compra, el inventario, la renovación de sesión, la aprobación de vendedor y la restricción de carrito y administración por rol. La cookie de sesión incluyó los atributos Secure y HttpOnly. Chrome mostró correctamente el catálogo público.

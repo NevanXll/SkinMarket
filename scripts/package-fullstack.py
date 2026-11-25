@@ -37,7 +37,7 @@ def package(name, selection, extra, replacements=None):
         assert z.testzip() is None
         assert not any(Path(n).name=='.env' or 'node_modules/' in n or '/target/' in n for n in z.namelist())
     print(target.name,round(target.stat().st_size/1024/1024,2),'MB')
-package('SkinMarket_FullStack.zip',files,'Proyecto completo. Crear .env privado desde .env.example y ejecutar docker compose up -d --build. Ver README.md. El despliegue público se realizará posteriormente.\n')
+package('SkinMarket_FullStack.zip',files,'Proyecto completo. Crear .env privado desde .env.example y ejecutar docker compose up -d --build. Ver README.md para la ejecución local y el enlace publicado.\n')
 frontend=[p for p in files if p.relative_to(ROOT).parts[0] not in {'backend','database','deploy','scripts'} and p.name not in {'compose.yaml','Dockerfile','.env.example'}]
 frontend.append(ROOT/'scripts/import-catalog.mjs')
 package('SkinMarket_Frontend.zip',frontend,'Frontend React. Requiere backend activo. npm ci y npm run dev. Vite envía la API a localhost:8081,8082,8083. Para producción, npm run build y configurar un proxy /api/v1 en el servidor. Las pruebas usan npm test.\n')

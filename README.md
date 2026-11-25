@@ -2,6 +2,8 @@
 
 Tienda de skins de CS2 con React, Bootstrap, tres servicios Spring Boot y MySQL. El servidor conserva las cuentas, el catálogo, los carritos, las compras y las postulaciones a vendedor. Las compras usan saldo virtual.
 
+[Abrir SkinMarket Pro en AWS](https://44.200.240.238/).
+
 ## Ejecutar todo con Docker
 
 Requisitos: Docker Desktop o Docker Engine con Compose. Copia `.env.example` a `.env` y cambia las contraseñas y el secreto JWT (mínimo 32 bytes). El archivo `.env` queda fuera de Git.
@@ -84,6 +86,6 @@ Swagger: http://localhost:8080/api/v1/usuarios/swagger-ui.html. Para productos y
 - `deploy/README.md`: despliegue, configuración y respaldo.
 - `database/skinmarket.sql`: respaldo de estructura y catálogo, sin cuentas ni sesiones privadas.
 
-El despliegue de esta versión full stack debe ejecutarse en un servidor con Java/Docker y MySQL. El alojamiento S3 de la maqueta anterior no ejecuta estos servicios. La URL pública de esta versión queda pendiente hasta configurar el servidor de la nube.
+La versión integrada funciona en una instancia EC2 de AWS Academy con Docker Compose y un proxy HTTPS. La URL depende de que la instancia conserve su IPv4 pública y siga en ejecución.
 
 Los DOCX y la ERS V2 conservados en el repositorio describen versiones anteriores; para esta entrega usa la documentación FullStack. Los datos iniciales del catálogo proceden de [ByMykel/CSGO-API](https://github.com/ByMykel/CSGO-API); las imágenes pertenecen a sus titulares. Precios y stock son ficticios. Referencias de estructura: [RestaurantEV2](https://github.com/Fideito14/RestaurantEV2) y [dsy1104_microservicios](https://github.com/jesvargasf/dsy1104_microservicios).

@@ -26,4 +26,8 @@ Para un respaldo operativo privado, usar mysqldump con `--single-transaction --n
 
 Cada servicio tiene `/actuator/health` accesible localmente. Las especificaciones están en `/api/v1/usuarios/openapi`, `/api/v1/productos/openapi` y `/api/v1/pedidos/openapi`. Revisar logs sin compartir secretos. En una actualización, hacer respaldo, ejecutar pruebas, reconstruir imágenes y validar los flujos con la BD persistida.
 
-Estado: configuración local preparada; servidor público, HTTPS y acceso externo deben comprobarse en el laboratorio. No se han creado recursos de nube desde este repositorio.
+## Instancia del laboratorio
+
+SkinMarket Pro se publicó en Amazon EC2, en la región us-east-1. Caddy gestiona el certificado público y reenvía el tráfico al puerto 8080 de Nginx en loopback. Los únicos puertos de entrada públicos son 80 y 443. La instancia se administra mediante AWS Systems Manager.
+
+URL verificada: https://44.200.240.238/. El sitio está disponible mientras la instancia siga en ejecución con la misma IPv4 pública. Si la IP cambia, se deben actualizar el origen permitido, el sitio de Caddy y el enlace de presentación.

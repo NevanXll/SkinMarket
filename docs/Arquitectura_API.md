@@ -86,3 +86,5 @@ Validaciones visuales: `src/lib/market.js` (validateAuth y validateProduct), `sr
 El 24 de noviembre de 2026 se ejecutaron 58 comprobaciones HTTP desde el proxy local hacia los servicios Spring Boot y MySQL 8.4. El recorrido verificó autenticación, CRUD, renovación, compra, rechazo y aprobación de solicitudes, consulta de órdenes y restricciones por rol. La prueba de concurrencia confirmó que una sola petición compra la última unidad y el reintento con la misma clave devuelve el pedido ya guardado.
 
 El recorrido en navegador comprobó que React recupera la sesión al recargar y muestra los datos guardados en MySQL al abrir el inventario. Tras aprobar la postulación, la sesión de vendedor muestra las vistas de productos y órdenes. El informe de pruebas detalla los comandos, sus resultados y el alcance local.
+
+La versión publicada en EC2 está disponible en https://44.200.240.238/. El proxy Caddy recibe HTTPS, luego Nginx sirve React y dirige las peticiones REST a los servicios Spring Boot. MySQL permanece en la red interna de Compose. Se verificaron desde fuera de EC2 el catálogo, el flujo de compra, la renovación de sesión y la aprobación de vendedor.
