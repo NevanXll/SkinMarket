@@ -75,8 +75,10 @@ Swagger: http://localhost:8080/api/v1/usuarios/swagger-ui.html. Para productos y
 
 ## Documentación y entrega
 
+- [Repositorio de los servicios Spring Boot](https://github.com/NevanXll/SkinMarket-Backend).
 - `docs/ERS_SkinMarket_FullStack.md`: requisitos actuales.
 - `docs/Arquitectura_API.md`: componentes, tablas, endpoints y reglas.
+- `docs/Documentacion_APIs.xlsx`: tabla de endpoints, entradas, respuestas y roles.
 - `docs/Manual_Usuario.md`: uso y demostración.
 - `docs/Informe_Testing.md`: resultados y alcance de las pruebas.
 - `deploy/README.md`: despliegue, configuración y respaldo.

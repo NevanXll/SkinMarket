@@ -22,10 +22,16 @@ for root in roots:
     files.extend(p for p in (ROOT/root).rglob('*') if p.is_file() and allowed(p))
 files.extend(p for p in ROOT.iterdir() if p.is_file() and p.name in {'index.html','package.json','package-lock.json','vite.config.js','karma.conf.cjs','README.md','.gitignore','.dockerignore','.env.example','Dockerfile','compose.yaml'})
 files=sorted(set(files))
-def package(name, selection, extra):
+def package(name, selection, extra, replacements=None):
     target=out/name
+    replacements = replacements or {}
     with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
-        for p in selection:z.write(p,p.relative_to(ROOT).as_posix())
+        for p in selection:
+            relative = p.relative_to(ROOT).as_posix()
+            if relative not in replacements:
+                z.write(p,relative)
+        for relative, content in replacements.items():
+            z.writestr(relative, content)
         z.writestr('LEEME_ENTREGA.md',extra)
     with zipfile.ZipFile(target) as z:
         assert z.testzip() is None
@@ -37,4 +43,21 @@ frontend.append(ROOT/'scripts/import-catalog.mjs')
 package('SkinMarket_Frontend.zip',frontend,'Frontend React. Requiere backend activo. npm ci y npm run dev. Vite envía la API a localhost:8081,8082,8083. Para producción, npm run build y configurar un proxy /api/v1 en el servidor. Las pruebas usan npm test.\n')
 backend=[p for p in files if p.relative_to(ROOT).parts[0] in {'backend','database','deploy'} or p.name in {'compose.yaml','.env.example','.dockerignore'}]
 backend.extend(p for p in files if 'postman' in p.parts or p.name in {'Arquitectura_API.md','ERS_SkinMarket_FullStack.md','SkinMarket_ERS_FullStack.pdf','SkinMarket_Arquitectura_API.pdf','Documentacion_APIs.xlsx'})
-package('SkinMarket_Backend.zip',backend,'Backend Spring Boot. Crear .env privado desde .env.example y ejecutar docker compose up -d --build mysql ms-usuarios ms-productos ms-pedidos. Para pruebas Java 21: backend/mvnw.cmd -f backend/pom.xml test. El frontend se entrega por separado.\n')
+backend_compose = (ROOT/'compose.yaml').read_text(encoding='utf-8').replace(
+    '    build: { context: ., dockerfile: Dockerfile }',
+    '    image: nginx:alpine\n    volumes: ["./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro"]'
+).replace('  web:\n', '  api-proxy:\n')
+backend_readme = '''# SkinMarket Pro Backend
+
+Servicios Spring Boot para autenticación y usuarios, productos, pedidos y postulaciones a vendedor. Usa Java 21 y MySQL 8.4.
+
+1. Crea `.env` a partir de `.env.example` y establece credenciales y secretos propios.
+2. Ejecuta `docker compose up -d --build`.
+3. Consulta la API en `http://localhost:8080/api/v1` y las interfaces Swagger en `/api/v1/{usuarios,productos,pedidos}/swagger-ui.html`.
+
+Para ejecutar pruebas con Java 21, abre la carpeta `backend` y ejecuta `./mvnw test` o `mvnw.cmd test` en Windows.
+
+La [arquitectura](docs/Arquitectura_API.md), la [planilla de endpoints](docs/Documentacion_APIs.xlsx), Postman y el respaldo SQL están incluidos. La interfaz React está en [SkinMarket](https://github.com/NevanXll/SkinMarket).
+'''
+package('SkinMarket_Backend.zip',backend,'Consulta README.md para iniciar los servicios y el proxy de la API.\n',
+        {'compose.yaml': backend_compose, 'README.md': backend_readme, '.gitignore': (ROOT/'.gitignore').read_text(encoding='utf-8')})
