@@ -1,6 +1,6 @@
 # Especificación de requisitos de SkinMarket Pro
 
-Versión 3.2 - React, Spring Boot y MySQL. Fecha: 24 de noviembre de 2026.
+Versión 3.3 - React, Spring Boot y MySQL. Fecha: 24 de noviembre de 2026.
 
 ## 1. Introducción
 
@@ -74,11 +74,11 @@ RF-11 Dashboard. ADMIN consulta ventas totales, cantidad de pedidos, unidades, t
 
 RF-12 Errores y persistencia. Toda operación confirmada permanece tras recargar o reiniciar servicios conservando el volumen MySQL. La interfaz informa éxito, validación, falta de permisos, conflicto o desconexión. No almacena contraseñas, JWT de acceso ni bases de usuarios en localStorage.
 
-RF-13 Solicitud del rol Vendedor. Un CLIENTE autenticado indica su motivo y puede añadir experiencia o contexto. El servidor persiste una solicitud activa por cliente. ADMIN decide aprobar o rechazar e indica el motivo del rechazo. La aprobación guarda la decisión y asigna VENDEDOR en una transacción. Un rechazo permite un nuevo envío.
+RF-13 Solicitud del rol Vendedor. Un CLIENTE autenticado indica su motivo, si estudia, país, estado o región y ciudad. Puede añadir experiencia, institución educativa y código postal según corresponda. El servidor persiste la solicitud visible para el titular y ADMIN. La aprobación registra la decisión y asigna VENDEDOR en una transacción. El rechazo exige una explicación y permite un nuevo envío.
 
 RF-14 Panel de vendedor. El vendedor puede listar productos, consultar su detalle, listar órdenes y consultar su detalle. Las operaciones de compra y de administración se restringen en la interfaz y en el servidor.
 
-RF-15 Perfil. Cada cuenta autenticada puede cambiar su nombre visible, avatar y biografía. El sistema conserva en MySQL las preferencias para mostrar el correo en el perfil y el saldo en el encabezado. Editar el perfil mantiene el rol de la cuenta.
+RF-15 Perfil. Cada cuenta autenticada puede cambiar su nombre visible, foto o avatar y biografía. La ubicación y fecha de nacimiento son opcionales. MySQL conserva los datos y las preferencias para mostrar el correo, fecha de nacimiento y ubicación en el resumen, y el nombre y saldo en el encabezado. El servicio valida la foto y la fecha. Editar el perfil mantiene el rol de la cuenta.
 
 ### 3.3 Diseño lógico de datos
 

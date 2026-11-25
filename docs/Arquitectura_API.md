@@ -29,7 +29,7 @@ Prefijo `/api/v1`. Respuestas de error incluyen `message`; errores de campos inc
 | POST /auth/refresh | Cookie y cabecera de seguridad | 200, token renovado |
 | POST /auth/logout | Cookie y cabecera de seguridad | 204 |
 | GET /me | Autenticado | 200, perfil sin contraseña |
-| PUT /me/profile | Autenticado | 200, actualiza el nombre visible, avatar, biografía y privacidad en pantalla |
+| PUT /me/profile | Autenticado | 200, actualiza la foto, los datos y las preferencias del perfil |
 | GET /products | Público | 200, catálogo activo |
 | GET /products/{id} | Público | 200 o 404 |
 | POST /products | ADMIN | 201 |
@@ -54,13 +54,13 @@ Prefijo `/api/v1`. Respuestas de error incluyen `message`; errores de campos inc
 
 ## Postulación a vendedor
 
-El cliente indica su motivo para obtener el rol VENDEDOR y puede añadir experiencia o contexto. El servidor registra la cuenta autenticada como titular, guarda la solicitud pendiente y permite consultarla. El administrador revisa el formulario desde Administración. La aprobación cambia el rol de la cuenta a VENDEDOR en la misma transacción que actualiza el estado de la solicitud. Si se rechaza, el cliente puede conocer el motivo y volver a postular.
+El cliente indica su motivo, si estudia, país, estado o región y ciudad. Puede añadir experiencia, institución educativa y código postal según corresponda. Spring Boot guarda esos datos en la solicitud. Solo la cuenta solicitante y los administradores pueden consultarla. La aprobación cambia el rol a VENDEDOR en la misma transacción que registra la decisión. Un rechazo permite volver a postular.
 
 Spring Security lee el rol vigente desde la cuenta en cada petición autenticada. Al actualizar el estado, React consulta el perfil y habilita el panel de solo lectura con productos y órdenes.
 
 ## Perfil y privacidad
 
-La ruta `/perfil` se abre desde el avatar del encabezado. `GET /me` devuelve los datos y preferencias de la cuenta autenticada. `PUT /me/profile` modifica los campos definidos en ProfileInput para esa misma cuenta. La visibilidad del correo y del saldo controla la presentación en pantalla. Los ajustes no alteran los permisos de la cuenta.
+La ruta `/perfil` se abre desde el avatar del encabezado. `GET /me` devuelve los datos y preferencias de la cuenta autenticada. `PUT /me/profile` valida las preferencias y los datos de esa misma cuenta. El navegador recorta la foto a 256 × 256 píxeles y Spring Boot verifica y recodifica el JPEG antes de guardarlo en MySQL. La fecha de nacimiento y la ubicación son opcionales y se ocultan del resumen por defecto. Los controles de privacidad cambian la presentación en pantalla. Los permisos de la cuenta se gestionan por separado.
 
 ## Compra y consistencia
 
@@ -72,15 +72,15 @@ El historial guarda items_json con nombre, precio, imagen y cantidad de cada pro
 
 | Tabla | Datos principales y relaciones |
 | --- | --- |
-| accounts | id, nombre, email único, password_hash, rol, bloqueo, saldo, avatar, biografía, preferencias y versiones |
+| accounts | id, nombre, email único, password_hash, rol, bloqueo, saldo, foto o avatar, biografía, fecha de nacimiento, ubicación, privacidad y versiones |
 | products | id, nombre, categoría, precio, stock, metadatos, imagen, deleted y version |
 | cart_items | usuario y producto con FK, cantidad positiva, combinación única |
 | purchases | FK usuario, fecha, total decimal, copia de artículos, request_key única por usuario |
 | refresh_sessions | hash de token, FK usuario, expiración y versión de autorización |
-| seller_applications | FK y clave por usuario, motivo, experiencia opcional, estado y datos de revisión |
+| seller_applications | FK y clave por usuario, motivo, experiencia, estudios, país, región, ciudad, código postal, estado y revisión |
 | flyway_schema_history | Migraciones SQL aplicadas |
 
-Flyway V1 crea el esquema, V2 carga 24 productos iniciales, V3 incorpora el rol VENDEDOR y V4 agrega los ajustes de perfil y adapta el formulario a solicitudes de rol. El catálogo visible en React proviene de la API REST. Los JSON de `src/data` sirven al importador y a las pruebas.
+Flyway V1 crea el esquema, V2 carga 24 productos iniciales y V3 incorpora el rol VENDEDOR. V4 agrega el perfil editable y V5 incorpora fotos, datos de perfil y los campos de estudio y ubicación de la solicitud. El catálogo visible en React proviene de la API REST. Los JSON de `src/data` sirven al importador y a las pruebas.
 
 ## Ubicación de validaciones
 

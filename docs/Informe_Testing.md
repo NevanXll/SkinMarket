@@ -1,6 +1,6 @@
 # Informe de pruebas de SkinMarket
 
-Fecha de ejecución: 24 de noviembre de 2026. Versión 3.2 con perfil editable y solicitud de rol Vendedor.
+Fecha de ejecución: 24 de noviembre de 2026. Versión 3.3 con foto personalizable y datos de postulación.
 
 ## Pruebas frontend
 
@@ -8,10 +8,10 @@ Comando: `npm test` o `npm run test:coverage`. Herramientas: Jasmine, Karma, Chr
 
 | Métrica | Cubierto | Total | Porcentaje |
 | --- | --- | --- | --- |
-| Líneas | 505 | 580 | 87,06% |
-| Sentencias | 609 | 695 | 87,62% |
-| Funciones | 224 | 276 | 81,15% |
-| Ramas | 544 | 623 | 87,31% |
+| Líneas | 539 | 622 | 86,65% |
+| Sentencias | 645 | 740 | 87,16% |
+| Funciones | 236 | 292 | 80,82% |
+| Ramas | 583 | 679 | 85,86% |
 
 El umbral configurado es 60% en cada métrica. Se incluye código de páginas, componentes, contexto, cliente HTTP y funciones reutilizables. Se excluyen el arranque main.jsx y los datos estáticos. No se redujo el alcance a una única función para alcanzar el porcentaje.
 
@@ -43,10 +43,10 @@ Se ejecutó `scripts/capture-ui.cjs` con Chrome y Playwright. Se comprobó el re
 
 ## Compilación, contenedores y respaldo
 
-La compilación de React y los tres servicios finalizó correctamente. Compose levantó MySQL 8.4, Spring Boot y Nginx. El respaldo `database/skinmarket.sql` se restauró en un esquema de verificación con 24 productos, cero cuentas, cero solicitudes y cuatro migraciones Flyway.
+La compilación de React y los tres servicios finalizó correctamente. Compose levantó MySQL 8.4, Spring Boot y Nginx. El respaldo `database/skinmarket.sql` se restauró en un esquema de verificación con 24 productos, cero cuentas, cero solicitudes y cinco migraciones Flyway.
 
 ## Verificación en AWS
 
 La versión integrada se publicó en https://44.200.240.238/ sobre Amazon EC2 en us-east-1. Desde un equipo externo se verificaron el certificado público HTTPS, el catálogo, el registro, la compra, el inventario, la renovación de sesión, la aprobación de vendedor y la restricción de carrito y administración por rol. La cookie de sesión incluyó los atributos Secure y HttpOnly. Chrome mostró correctamente el catálogo público.
 
-En la versión 3.2 publicada se comprobó que el nombre, avatar, biografía y preferencias de privacidad sobrevivan a la renovación de sesión. Un cliente pudo enviar una solicitud con solo el motivo. Su cuenta obtuvo acceso al panel de vendedor tras la aprobación de un administrador.
+En la versión 3.3 se comprobó por HTTPS la carga, persistencia y eliminación de una foto, junto con la fecha de nacimiento, ubicación y preferencias de privacidad. También se comprobó que el cliente pueda enviar los datos de estudios y ubicación y que solo el administrador pueda revisar y aprobar la solicitud completa. La cuenta obtuvo acceso al panel después de la aprobación.
