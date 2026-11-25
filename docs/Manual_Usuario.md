@@ -108,13 +108,13 @@ Nota. Las preferencias se mantienen al volver a abrir la sesión.
 
 ## Recargar la billetera
 
-Pulsa el botón de saldo en el encabezado. Elige una recarga de 500, 1.000, 2.500 o 5.000 USD virtuales. El modal muestra cada monto en la moneda seleccionada y su equivalente. Pulsa **Añadir saldo virtual** para acreditar la recarga.
+Pulsa el botón de saldo en el encabezado. Cada opción indica el saldo virtual que recibirás y el precio simulado en USD y CLP. Elige un paquete y pulsa **Añadir saldo virtual**. Si el precio cambia mientras el modal está abierto, elige nuevamente con el precio actualizado.
 
 **Figura 12. Opciones de recarga**
 
 ![Opciones de recarga](screenshots/12-recarga.png)
 
-Nota. El precio equivalente se calcula con la tasa fija en USD y CLP. Las recargas se realizan con saldo simulado.
+En **Administración → Recargas**, cambia el precio en USD de un paquete y pulsa **Guardar precio**. El cambio se guarda en MySQL. La cantidad de saldo del paquete se mantiene fija y la tienda usa la tasa de 950 CLP por USD para mostrar el equivalente.
 
 ## Alcance
 

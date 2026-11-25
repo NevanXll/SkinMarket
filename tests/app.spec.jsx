@@ -94,19 +94,42 @@ describe('Interfaz React con API simulada', () => {
   it('agrega, compra y muestra inventario', async () => { const { user } = await setup('/productos', 'client'); await user.click(screen.getAllByRole('button', { name: 'Añadir al carrito' })[0]); await user.click(screen.getByRole('link', { name: /Carrito, 1/ })); await user.click(screen.getByRole('button', { name: /Confirmar compra/ })); expect(await screen.findByRole('heading', { name: /inventario/i })).toBeTruthy(); });
   it('cambia cantidades y elimina líneas', async () => { const { user } = await setup('/carrito', 'client', (s) => { s.cart = [{ productId: s.products[0].id, quantity: 2 }]; }); await user.click(screen.getByLabelText(/^Reducir/)); await waitFor(() => expect(screen.getByRole('link', { name: /Carrito, 1/ })).toBeTruthy()); await user.click(screen.getByLabelText(/^Quitar/)); expect(await screen.findByText('Tu carrito está esperando')).toBeTruthy(); });
   it('muestra restricción de saldo y stock', async () => { await setup('/carrito', 'client', (s) => { s.current.balance = 0; s.cart = [{ productId: s.products[0].id, quantity: 99999 }]; }); expect(screen.getByRole('button', { name: /Confirmar compra/ })).toBeDisabled(); expect(screen.getByText(/Stock insuficiente. Reduce/)).toBeTruthy(); });
-  it('muestra montos en ambas monedas y acredita el seleccionado en USD', async () => {
-    const { user, server } = await setup('/productos', 'client');
+  it('muestra el precio simulado en ambas monedas y acredita el saldo fijo', async () => {
+    const { user, server } = await setup('/productos', 'client', (s) => { s.walletPackages[0].priceUsd = 250; });
     const initial = server.current.balance;
     await user.selectOptions(screen.getByLabelText('Moneda'), 'CLP');
     await user.click(screen.getByLabelText('Recargar saldo virtual'));
     const dialog = within(screen.getByRole('dialog', { name: 'Recargar saldo' }));
-    expect(dialog.getAllByRole('radio').length).toBe(4);
+    expect((await dialog.findAllByRole('radio')).length).toBe(4);
     const confirm = dialog.getByRole('button', { name: 'Añadir saldo virtual' });
     expect(confirm).toBeDisabled();
-    await user.click(dialog.getByRole('radio', { name: /475\.000 CLP.*500\.00 USD/ }));
+    await user.click(dialog.getByRole('radio', { name: /475\.000 CLP de saldo.*237\.500 CLP.*250\.00 USD/ }));
     await user.click(confirm);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(server.current.balance).toBe(initial + 500);
+  });
+  it('exige seleccionar nuevamente si cambia el precio de una recarga abierta', async () => {
+    const { user, server } = await setup('/productos', 'client');
+    await user.click(screen.getByLabelText('Recargar saldo virtual'));
+    const dialog = within(screen.getByRole('dialog', { name: 'Recargar saldo' }));
+    await user.click(await dialog.findByRole('radio', { name: /^\$500\.00 USD de saldo.*500\.00 USD/ }));
+    server.walletPackages[0].priceUsd = 250;
+    const confirm = dialog.getByRole('button', { name: 'Añadir saldo virtual' });
+    await user.click(confirm);
+    expect(await dialog.findByRole('alert')).toHaveTextContent('El precio cambió');
+    expect((await dialog.findByRole('radio', { name: /500\.00 USD de saldo.*250\.00 USD/ })).checked).toBeFalse();
+    expect(confirm).toBeDisabled();
+    expect(server.current.balance).toBe(12500);
+  });
+  it('permite al administrador guardar un precio sin modificar el saldo del paquete', async () => {
+    const { user, server } = await setup('/admin', 'admin');
+    await user.click(screen.getByRole('button', { name: 'Recargas', exact: true }));
+    const input = await screen.findByRole('spinbutton', { name: 'Precio en USD para $500.00 USD de saldo' });
+    const packForm = within(input.closest('form'));
+    fireEvent.change(input, { target: { value: '249.99' } });
+    await user.click(packForm.getByRole('button', { name: 'Guardar precio' }));
+    expect(await packForm.findByRole('status')).toHaveTextContent('Precio actualizado.');
+    expect(server.walletPackages[0]).toEqual({ id: 'pack-500', priceUsd: 249.99, credits: 500 });
   });
   it('muestra compras vacías y 404', async () => { await setup('/compras', 'client'); expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/compras/i); });
   it('muestra página inexistente', async () => { await setup('/inexistente'); expect(screen.getByText('404 · Fuera del mapa')).toBeTruthy(); });

@@ -7,6 +7,7 @@ export default defineConfig({
   server: { proxy: {
     '/api/v1/products': 'http://localhost:8082',
     '/api/v1/admin/orders': 'http://localhost:8083',
+    '/api/v1/admin/wallet': 'http://localhost:8083',
     '/api/v1/seller/orders': 'http://localhost:8083',
     '/api/v1/cart': 'http://localhost:8083',
     '/api/v1/orders': 'http://localhost:8083',

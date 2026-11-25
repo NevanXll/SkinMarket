@@ -68,7 +68,7 @@ RF-08 Compra. El servidor recibe una clave de petición, valida cuenta, carrito,
 
 RF-09 Inventario e historial. El usuario consulta sus pedidos y artículos adquiridos persistidos. Cada compra conserva instantánea de productos, cantidades, fecha y total. La baja posterior de una skin no modifica el historial.
 
-RF-10 Billetera y moneda. Permite recargas virtuales de 0,01 a 100.000 USD por operación. Muestra importes USD o CLP a tasa académica fija 950; MySQL conserva valores en USD. No realiza cargos bancarios. La preferencia de moneda es el único dato funcional guardado en localStorage.
+RF-10 Billetera y moneda. La web ofrece cuatro paquetes de saldo virtual. ADMIN puede modificar únicamente el precio simulado de cada paquete, entre 0,01 y 100.000 USD y con hasta dos decimales. MySQL guarda los precios en USD. La interfaz los muestra en USD y CLP a una tasa fija de 950. Si el precio cambia antes de confirmar, el usuario debe volver a seleccionar el paquete. Reintentar una solicitud confirmada con la misma clave no duplica la recarga. La operación no realiza cobros. La preferencia de moneda es el único dato funcional guardado en localStorage.
 
 RF-11 Dashboard. ADMIN consulta ventas totales, cantidad de pedidos, unidades, ticket promedio y cuentas bloqueadas; gráficos por día, stock por categoría y productos vendidos. Las recargas no se incluyen como ventas. Sin compras muestra estado vacío; no genera ventas ficticias.
 

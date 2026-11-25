@@ -31,7 +31,10 @@ add('2 Catálogo', 'Producto inexistente', 'GET', '/products/id-inexistente', 40
 add('3 Compra CLIENTE', 'Login CLIENTE', 'POST', '/auth/login', body={'email': '{{client_email}}', 'password': '{{client_password}}'}, auth=False, save=save_token)
 add('3 Compra CLIENTE', 'Añadir al carrito', 'PUT', '/cart/{{product_id}}', body={'quantity': 1})
 add('3 Compra CLIENTE', 'Consultar carrito', 'GET', '/cart')
-add('3 Compra CLIENTE', 'Recargar saldo virtual', 'POST', '/wallet/top-up', body={'amount': 100})
+save_wallet_price = 'if (pm.response.code === 200) pm.environment.set("wallet_price", pm.response.json().find(p => p.id === "pack-500").priceUsd);'
+add('3 Compra CLIENTE', 'Consultar paquetes de recarga', 'GET', '/wallet/packages', save=save_wallet_price)
+add('3 Compra CLIENTE', 'Recargar saldo virtual', 'POST', '/wallet/packages/pack-500/top-up',
+    body={'expectedPrice': '{{wallet_price}}', 'requestKey': '{{$guid}}'})
 add('3 Compra CLIENTE', 'Comprar', 'POST', '/orders', 201, {'requestKey': '{{$guid}}'}, save='if (pm.response.code === 201) pm.environment.set("order_id", pm.response.json().id);')
 add('3 Compra CLIENTE', 'Mis compras', 'GET', '/orders')
 add('3 Compra CLIENTE', 'Detalle compra', 'GET', '/orders/{{order_id}}')
@@ -47,6 +50,9 @@ add('4 Administración', 'Detalle usuario', 'GET', '/admin/users/{{managed_user_
 add('4 Administración', 'Editar y bloquear usuario', 'PUT', '/admin/users/{{managed_user_id}}', body={**user, 'blocked': True})
 add('4 Administración', 'Eliminar usuario sin compras', 'DELETE', '/admin/users/{{managed_user_id}}', 204)
 add('4 Administración', 'Pedidos administrativos', 'GET', '/admin/orders')
+add('4 Administración', 'Consultar precio vigente de recarga', 'GET', '/wallet/packages', save=save_wallet_price)
+add('4 Administración', 'Editar precio de recarga de 500 USD', 'PUT', '/admin/wallet/packages/pack-500', body={'priceUsd': 249.99})
+add('4 Administración', 'Restaurar precio anterior de recarga', 'PUT', '/admin/wallet/packages/pack-500', body={'priceUsd': '{{wallet_price}}'})
 add('5 Validaciones', 'Precio negativo', 'POST', '/products', 400, {**product, 'price': -1})
 add('5 Validaciones', 'Stock fraccionario', 'POST', '/products', 400, {**product, 'stock': 1.5})
 add('5 Validaciones', 'Registro inválido', 'POST', '/auth/register', 400, {'name': 'A', 'email': 'invalid', 'password': '123'}, False)
@@ -69,7 +75,7 @@ add('6 Vendedor', 'Listar órdenes', 'GET', '/seller/orders',
     save='if (pm.response.code === 200 && pm.response.json().length) pm.environment.set("order_id", pm.response.json()[0].id);')
 add('6 Vendedor', 'Detalle de orden', 'GET', '/seller/orders/{{order_id}}')
 collection = {'info': {'name': 'SkinMarket Full Stack', 'schema': 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json', 'description': 'Requiere servidor activo y entorno privado. Ejecutar por grupos. Los cambios de compra son persistentes y el saldo es virtual.'}, 'item': [{'name': name, 'item': items} for name, items in groups.items()]}
-values = {'base_url': 'http://localhost:8080/api/v1', 'client_email': '', 'client_password': '', 'admin_email': '', 'admin_password': '', 'managed_email': '', 'access_token': '', 'product_id': '', 'managed_product_id': '', 'managed_user_id': '', 'order_id': '', 'applicant_id': ''}
+values = {'base_url': 'http://localhost:8080/api/v1', 'client_email': '', 'client_password': '', 'admin_email': '', 'admin_password': '', 'managed_email': '', 'access_token': '', 'product_id': '', 'managed_product_id': '', 'managed_user_id': '', 'order_id': '', 'applicant_id': '', 'wallet_price': ''}
 environment = {'name': 'SkinMarket local ejemplo', 'values': [{'key': k, 'value': v, 'type': 'secret' if 'password' in k or k == 'access_token' else 'default', 'enabled': True} for k,v in values.items()], '_postman_variable_scope': 'environment'}
 target = Path('docs/postman'); target.mkdir(parents=True, exist_ok=True)
 for name, content in [('SkinMarket.postman_collection.json', collection), ('SkinMarket.postman_environment.json', environment)]:

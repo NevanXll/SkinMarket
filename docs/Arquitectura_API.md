@@ -39,7 +39,10 @@ Prefijo `/api/v1`. Respuestas de error incluyen `message`; errores de campos inc
 | GET/PUT/DELETE /admin/users/{id} | ADMIN | 200 detalle/edición o 204 eliminación |
 | GET /cart | Autenticado | 200, carrito propio |
 | PUT /cart/{productId} | Autenticado | 200; quantity=0 elimina línea |
-| POST /wallet/top-up | Autenticado | 200, recarga virtual entre 0,01 y 100.000 USD |
+| GET /wallet/packages | ADMIN, CLIENTE | 200, paquetes con saldo fijo y precio simulado en USD |
+| PUT /admin/wallet/packages/{id} | ADMIN | 200, cambia solo el precio; 400 si está fuera de rango; 404 si el paquete no existe |
+| POST /wallet/packages/{id}/top-up | ADMIN, CLIENTE | 200, acredita saldo virtual; 409 si el precio cambió o la clave de solicitud pertenece a otro paquete |
+| POST /wallet/top-up | ADMIN, CLIENTE | 200, recarga virtual directa para los clientes que usan esta operación |
 | POST /orders | Autenticado | 201, compra con requestKey |
 | GET /orders | Autenticado | 200, compras propias |
 | GET /orders/{id} | Dueño o ADMIN | 200; impide acceso a compras ajenas |

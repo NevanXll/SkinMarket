@@ -84,7 +84,9 @@ export function MarketProvider({ children }) {
       pendingPurchase.current ||= createId();
       await api('/orders', { method: 'POST', body: { requestKey: pendingPurchase.current } });
     }, 'Compra realizada con éxito. Revisa tu inventario.').then(() => { pendingPurchase.current = null; }),
-    topUp: (amount) => mutate(() => api('/wallet/top-up', { method: 'POST', body: { amount: Math.round(amount * 100) / 100 } }), 'Saldo virtual recargado.'),
+    topUp: (option, requestKey) => mutate(() => api(`/wallet/packages/${option.id}/top-up`, {
+      method: 'POST', body: { expectedPrice: option.priceUsd, requestKey },
+    }), 'Saldo virtual recargado.'),
     saveProduct: (p) => {
       if (Object.keys(validateProduct(p)).length) return Promise.reject(new Error('Revisa los datos del producto.'));
       return mutate(() => api(`/products${p.id ? `/${p.id}` : ''}`, { method: p.id ? 'PUT' : 'POST', body: { ...p, price: Number(p.price), stock: Number(p.stock) } }), 'Producto guardado.');

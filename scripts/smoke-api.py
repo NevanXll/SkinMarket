@@ -97,6 +97,29 @@ winner.call('GET', '/me')
 winner.call('POST', '/auth/logout', expected=204)
 winner.call('POST', '/auth/refresh', expected=401)
 user = admin.call('POST', '/admin/users', {'name': 'QA Gestión', 'email': f'qa-managed-{suffix}@example.com', 'role': 'CLIENTE', 'password': password, 'blocked': False}, 201)
+wallet_client = Client()
+wallet_client.login(user['email'], password)
+packages = wallet_client.call('GET', '/wallet/packages')
+assert len(packages) == 4
+pack = packages[0]
+price_endpoint = '/admin/wallet/packages/' + pack['id']
+top_up_endpoint = '/wallet/packages/' + pack['id'] + '/top-up'
+new_price = 249.99 if pack['priceUsd'] != 249.99 else 250
+wallet_client.call('PUT', price_endpoint, {'priceUsd': new_price}, 403)
+admin.call('PUT', price_endpoint, {'priceUsd': -1}, 400)
+admin.call('PUT', price_endpoint, {'priceUsd': 249.999}, 400)
+starting_balance = wallet_client.call('GET', '/me')['balance']
+try:
+    updated = admin.call('PUT', price_endpoint, {'priceUsd': new_price})
+    assert updated['credits'] == pack['credits']
+    assert wallet_client.call('GET', '/wallet/packages')[0]['priceUsd'] == new_price
+    wallet_client.call('POST', top_up_endpoint, {'expectedPrice': pack['priceUsd'], 'requestKey': suffix}, 409)
+    assert wallet_client.call('GET', '/me')['balance'] == starting_balance
+    recharge = {'expectedPrice': new_price, 'requestKey': suffix}
+    for _ in range(2):
+        assert wallet_client.call('POST', top_up_endpoint, recharge)['balance'] == starting_balance + pack['credits']
+finally:
+    admin.call('PUT', price_endpoint, {'priceUsd': pack['priceUsd']})
 admin.call('PUT', '/admin/users/' + user['id'], {**user, 'blocked': True})
 admin.call('DELETE', '/admin/users/' + user['id'], expected=204)
 admin.call('GET', '/admin/users/' + user['id'], expected=404)

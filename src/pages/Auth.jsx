@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Crosshair } from "lucide-react";
 import { useMarket } from "../context/MarketContext";
-import { validateAuth } from "../lib/market";
+import { imageUrl, validateAuth } from "../lib/market";
 export default function Auth() {
   const { login, register } = useMarket();
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ export default function Auth() {
   return (
     <div className="auth-layout row g-0">
       <section className="auth-story col-12 col-lg-6">
+        <img className="auth-backdrop" src={imageUrl("images/skins/skin-525ac56c082c.png")} alt="" />
         <span className="eyebrow">BIENVENIDO A SKINMARKET PRO</span>
         <h1>
           NO ES SOLO{" "}

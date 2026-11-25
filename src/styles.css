@@ -1014,6 +1014,52 @@ a svg {
   padding: 40px 34px 60px;
   min-height: 65vh;
 }
+.account-page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
+  align-content: start;
+  max-width: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 88% 240px, #542a886b, transparent 48%),
+    radial-gradient(ellipse at 12% 540px, #28244f91, transparent 46%),
+    #090d16;
+}
+.account-backdrop {
+  position: absolute;
+  z-index: -1;
+  inset: 12px -13vw auto auto;
+  width: clamp(660px, 82vw, 1500px);
+  filter: blur(7px) hue-rotate(14deg) saturate(0.8);
+  opacity: 0.28;
+  transform: rotate(-17deg);
+  pointer-events: none;
+}
+.account-page .page-heading { text-align: center; }
+.account-page .order-card {
+  background: #131a27f2;
+  border-color: #433457;
+  box-shadow: 0 12px 42px #07091166;
+}
+.account-page .form-control::placeholder { color: #9099ae; }
+.account-page .form-select {
+  color: #f0f0f7;
+  background-color: #191f2b;
+  border-color: #2a3140;
+  color-scheme: dark;
+}
+.account-page .form-select:focus {
+  border-color: #aa7bff;
+  box-shadow: 0 0 0 .2rem #8b4dff33;
+}
+.account-page .order-card + .seller-form { margin-top: 14px; }
+@media (max-width: 600px) {
+  .account-backdrop { right: -230px; opacity: 0.2; }
+  .account-page .order-card { padding: 18px; }
+}
 .page-heading {
   margin: 12px 0 32px;
 }
@@ -1109,11 +1155,23 @@ a svg {
 }
 .auth-story {
   position: relative;
+  isolation: isolate;
   padding: 50px 38px;
   overflow: hidden;
   background:
     radial-gradient(ellipse at 60% 85%, #6930a33b, transparent 65%),
     linear-gradient(130deg, #211a36, #111621);
+}
+.auth-backdrop {
+  position: absolute;
+  z-index: -1;
+  right: -28%;
+  bottom: 2%;
+  width: 105%;
+  filter: blur(5px) saturate(0.8);
+  opacity: 0.3;
+  transform: rotate(-19deg);
+  pointer-events: none;
 }
 .auth-story h1 {
   font-family: "Barlow Condensed", sans-serif;

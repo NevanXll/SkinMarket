@@ -5,6 +5,7 @@ import { imageUrl, money, validateProduct } from "../lib/market";
 import Modal from "../components/Modal";
 import AdminOverview from "../components/AdminOverview";
 import AdminUsers from "../components/AdminUsers";
+import AdminWallet from "../components/AdminWallet";
 import SellerApplicationsAdmin from "../components/SellerApplicationsAdmin";
 import "../admin.css";
 const blank = {
@@ -78,6 +79,7 @@ export default function Admin() {
           ["products", "Productos"],
           ["users", "Usuarios"],
           ["sellers", "Solicitudes de vendedor"],
+          ["wallet", "Recargas"],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -92,6 +94,7 @@ export default function Admin() {
       {tab === "overview" && <AdminOverview />}
       {tab === "users" && <AdminUsers />}
       {tab === "sellers" && <SellerApplicationsAdmin />}
+      {tab === "wallet" && <AdminWallet />}
       {tab === "products" && (
         <>
           <div className="account-stats">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useMarket } from "../context/MarketContext";
+import { imageUrl } from "../lib/market";
 
 export default function SellerApplication() {
   const { user, refreshAccount } = useMarket();
@@ -74,7 +75,8 @@ export default function SellerApplication() {
 
   const status = application?.status;
   return (
-    <div className="page-container">
+    <div className="page-container account-page">
+      <img className="account-backdrop" src={imageUrl("images/skins/skin-63c1d72b8501.png")} alt="" />
       <div className="page-heading">
         <h1>Solicitar rol Vendedor</h1>
         <p>Cuéntanos por qué quieres obtener este rol. Un administrador revisará tu postulación.</p>

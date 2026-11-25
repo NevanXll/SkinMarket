@@ -3,6 +3,7 @@ import { Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileAvatar, { avatarOptions } from "../components/ProfileAvatar";
 import { useMarket } from "../context/MarketContext";
+import { imageUrl } from "../lib/market";
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -86,7 +87,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container account-page">
+      <img className="account-backdrop" src={imageUrl("images/skins/skin-7b1ef066823d.png")} alt="" />
       <div className="page-heading">
         <h1>Mi perfil</h1>
         <p>Personaliza tu cuenta y elige qué datos aparecen en pantalla.</p>

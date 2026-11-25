@@ -421,6 +421,39 @@
           ]
         },
         {
+          "name": "Consultar paquetes de recarga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "SkinMarket"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/wallet/packages"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) pm.environment.set(\"wallet_price\", pm.response.json().find(p => p.id === \"pack-500\").priceUsd);"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Recargar saldo virtual",
           "request": {
             "method": "POST",
@@ -438,10 +471,10 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/wallet/top-up",
+            "url": "{{base_url}}/wallet/packages/pack-500/top-up",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": 100\n}",
+              "raw": "{\n  \"expectedPrice\": \"{{wallet_price}}\",\n  \"requestKey\": \"{{$guid}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -987,6 +1020,121 @@
               }
             ],
             "url": "{{base_url}}/admin/orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar precio vigente de recarga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "SkinMarket"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/wallet/packages"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) pm.environment.set(\"wallet_price\", pm.response.json().find(p => p.id === \"pack-500\").priceUsd);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar precio de recarga de 500 USD",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "SkinMarket"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/wallet/packages/pack-500",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priceUsd\": 249.99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restaurar precio anterior de recarga",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Requested-With",
+                "value": "SkinMarket"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/wallet/packages/pack-500",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priceUsd\": \"{{wallet_price}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "event": [
             {

@@ -6,6 +6,7 @@ export function mockServer(role = null) {
   const admin = { ...client, id: 'admin-test', name: 'Administrador', email: 'admin@example.com', role: 'ADMIN' };
   const seller = { ...client, id: 'seller-test', name: 'Vendedor Prueba', role: 'VENDEDOR' };
   const server = { products: structuredClone(catalogue), accounts: [client, admin], current: ({ admin, client, seller })[role] || null, cart: [], orders: [], inventory: [], applications: [], fail: '' };
+  server.walletPackages = [500, 1000, 2500, 5000].map((credits) => ({ id: `pack-${credits}`, credits, priceUsd: credits }));
   spyOn(window, 'fetch').and.callFake(async (url, options = {}) => {
     const path = url.replace('/api/v1', ''); const method = options.method || 'GET';
     const body = options.body ? JSON.parse(options.body) : {};
@@ -51,7 +52,19 @@ export function mockServer(role = null) {
     if(path === '/cart') return reply(server.cart);
     if(path.startsWith('/cart/')) { const productId = path.split('/').pop(); server.cart = server.cart.filter((l) => l.productId !== productId); if(body.quantity) server.cart.push({ productId, quantity: body.quantity }); return reply(server.cart); }
     if(path === '/inventory') return reply(server.inventory);
-    if(path === '/wallet/top-up') { server.current.balance += body.amount; return reply(server.current); }
+    if (path === '/wallet/packages') return reply(server.walletPackages);
+    if (path.startsWith('/admin/wallet/packages/') && method === 'PUT') {
+      if (server.current?.role !== 'ADMIN') return reply({ message: 'Acceso denegado.' }, 403);
+      const pack = server.walletPackages.find((option) => option.id === path.split('/').pop());
+      pack.priceUsd = body.priceUsd;
+      return reply(pack);
+    }
+    if (path.startsWith('/wallet/packages/') && method === 'POST') {
+      const pack = server.walletPackages.find((option) => option.id === path.split('/')[3]);
+      if (pack.priceUsd !== body.expectedPrice) return reply({ message: 'El precio cambió. Selecciona nuevamente el paquete.' }, 409);
+      server.current.balance += pack.credits;
+      return reply(server.current);
+    }
     if(path === '/orders' && method === 'POST') {
       const items = server.cart.map((l) => ({ ...server.products.find((p) => p.id === l.productId), quantity: l.quantity }));
       const total = items.reduce((n, p) => n + p.price * p.quantity, 0);
