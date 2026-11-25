@@ -7,16 +7,20 @@ import Auth from "./pages/Auth";
 import Cart from "./pages/Cart";
 import Inventory from "./pages/Inventory";
 import Admin from "./pages/Admin";
-function Protected({ children, admin = false }) {
-  const { user } = useMarket();
+import ProductDetail from "./pages/ProductDetail";
+import SellerApplication from "./pages/SellerApplication";
+import SellerPanel from "./pages/SellerPanel";
+function Protected({ children, admin = false, allowed = ["client", "admin"] }) {
+  const { user, loading } = useMarket();
+  if (loading) return <p role="status">Restaurando sesión…</p>;
   if (!user) return <Navigate to="/acceso" replace />;
-  if (admin && user.role !== "admin")
+  if (!(admin ? user.role === "admin" : allowed.includes(user.role)))
     return (
       <div className="empty-state">
         <h1>Acceso restringido</h1>
-        <p>Esta sección es exclusiva para administradores.</p>
-        <Link className="button" to="/productos">
-          Volver al mercado
+        <p>{admin ? "Esta sección es exclusiva para administradores." : "Tu cuenta no tiene acceso a esta sección."}</p>
+        <Link className="button" to={user.role === "seller" ? "/vendedor" : "/productos"}>
+          {user.role === "seller" ? "Volver al panel" : "Volver al mercado"}
         </Link>
       </div>
     );
@@ -24,15 +28,27 @@ function Protected({ children, admin = false }) {
 }
 export default function App() {
   const { pathname } = useLocation();
+  const { user } = useMarket();
+  const seller = user?.role === "seller";
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Catalogue home />} />
-        <Route path="/productos" element={<Catalogue />} />
-        <Route path="/acceso" element={<Auth />} />
+        <Route path="/" element={seller ? <Navigate to="/vendedor" replace /> : <Catalogue home />} />
+        <Route path="/productos" element={seller ? <Navigate to="/vendedor" replace /> : <Catalogue />} />
+        <Route path="/productos/:id" element={<ProductDetail />} />
+        <Route path="/acceso" element={seller ? <Navigate to="/vendedor" replace /> : <Auth />} />
+        <Route path="/vender" element={
+          <Protected allowed={["client", "seller"]}><SellerApplication /></Protected>
+        } />
+        <Route path="/vendedor" element={
+          <Protected allowed={["seller"]}><SellerPanel /></Protected>
+        } />
+        <Route path="/vendedor/ordenes/:id" element={
+          <Protected allowed={["seller"]}><SellerPanel orderDetail /></Protected>
+        } />
         <Route path="/login" element={<Navigate to="/acceso" replace />} />
         <Route
           path="/carrito"

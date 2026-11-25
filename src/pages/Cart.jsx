@@ -20,9 +20,9 @@ export default function Cart() {
   const shortage = lines.some(
     (l) => !l.product || l.quantity > l.product.stock,
   );
-  function change(id, q) {
+  async function change(id, q) {
     try {
-      changeQuantity(id, q);
+      await changeQuantity(id, q);
     } catch (e) {
       notify(e.message, "error");
     }
@@ -127,9 +127,9 @@ export default function Cart() {
             <button
               className="button full-width"
               disabled={total > user.balance || shortage}
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  buy();
+                  await buy();
                   navigate("/inventario");
                 } catch (e) {
                   notify(e.message, "error");

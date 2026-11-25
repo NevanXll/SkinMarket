@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Crosshair } from "lucide-react";
 import { useMarket } from "../context/MarketContext";
-import { DEMO_ACCOUNTS, validateAuth } from "../lib/market";
+import { validateAuth } from "../lib/market";
 export default function Auth() {
   const { login, register } = useMarket();
   const navigate = useNavigate();
@@ -10,23 +10,28 @@ export default function Auth() {
   const [values, setValues] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [failure, setFailure] = useState("");
+  const [pending, setPending] = useState(false);
   const isRegister = mode === "register";
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     setFailure("");
     const errors = validateAuth(values, isRegister);
     setErrors(errors);
     if (Object.keys(errors).length) return;
+    if (pending) return;
+    setPending(true);
     try {
       if (isRegister) {
-        register(values);
+        await register(values);
         navigate("/productos");
       } else {
-        const account = login(values);
-        navigate(account.role === "admin" ? "/admin" : "/productos");
+        const account = await login(values);
+        navigate({ admin: "/admin", seller: "/vendedor", client: "/productos" }[account.role]);
       }
     } catch (e) {
       setFailure(e.message);
+    } finally {
+      setPending(false);
     }
   }
   return (
@@ -142,35 +147,14 @@ export default function Auth() {
               {failure}
             </p>
           )}
-          <button className="button full-width">
+          <button className="button full-width" disabled={pending} aria-busy={pending}>
             {isRegister ? "Crear mi cuenta" : "Entrar a SkinMarket"}
             <ArrowRight size={16} />
           </button>
         </form>
-        <div className="demo-box">
-          <span className="eyebrow">PRUEBA LA EXPERIENCIA</span>
-          <p>Completa los datos con una cuenta de demostración:</p>
-          <div className="demo-buttons">
-            {DEMO_ACCOUNTS.map((u) => (
-              <button
-                className="button secondary"
-                key={u.id}
-                onClick={() => {
-                  setMode("login");
-                  setValues({ name: "", email: u.email, password: u.password });
-                  setErrors({});
-                  setFailure("");
-                }}
-              >
-                {u.role === "admin" ? "Administrador" : "Cliente"}
-              </button>
-            ))}
-          </div>
-        </div>
         <p className="security-note">
           <ShieldCheck size={15} />
-          Acceso académico simulado. Usa una contraseña de prueba: los datos se
-          guardan en este navegador.
+          Contraseñas protegidas con BCrypt. Sesión validada por el servidor.
         </p>
         <Link className="text-link" to="/productos">
           Seguir explorando el mercado →

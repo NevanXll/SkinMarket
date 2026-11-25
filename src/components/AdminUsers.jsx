@@ -13,7 +13,7 @@ import { validateAccount } from "../lib/admin";
 import Modal from "./Modal";
 
 export default function AdminUsers() {
-  const { state, user: actor, saveUser, notify } = useMarket();
+  const { state, user: actor, saveUser, createUser, deleteUser, notify } = useMarket();
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
@@ -48,6 +48,7 @@ export default function AdminUsers() {
           </p>
         </div>
         <span className="chart-chip">{users.length} cuentas</span>
+        <button className="button" onClick={() => { setEditing({ name: '', email: '', password: '', role: 'client', blocked: false }); setErrors({}); }}>Nuevo usuario</button>
       </div>
       <div className="users-toolbar">
         <label className="search-box">
@@ -65,6 +66,7 @@ export default function AdminUsers() {
             <option value="">Todos los roles</option>
             <option value="client">Cliente</option>
             <option value="admin">Administrador</option>
+            <option value="seller">Vendedor</option>
           </select>
         </label>
         <label>
@@ -106,7 +108,7 @@ export default function AdminUsers() {
                 <td>
                   <span className={`role-badge ${account.role}`}>
                     <ShieldCheck size={12} />
-                    {account.role === "admin" ? "Administrador" : "Cliente"}
+                    {{ admin: "Administrador", seller: "Vendedor", client: "Cliente" }[account.role]}
                   </span>
                 </td>
                 <td>
@@ -127,6 +129,9 @@ export default function AdminUsers() {
                     >
                       <Pencil size={16} />
                     </button>
+                    <button className="icon-button danger" disabled={account.id === actor.id}
+                      aria-label={`Eliminar usuario ${account.name}`}
+                      onClick={() => setTarget({ ...account, deleting: true })}>Eliminar</button>
                     <button
                       className={`icon-button ${account.blocked ? "" : "danger"}`}
                       aria-label={`${account.blocked ? "Desbloquear" : "Bloquear"} usuario ${account.name}`}
@@ -157,8 +162,7 @@ export default function AdminUsers() {
         )}
       </div>
       <p className="dashboard-scope">
-        El bloqueo impide iniciar sesión y comprar. Las cuentas no se eliminan
-        para conservar su historial. No se muestran contraseñas.
+        El bloqueo impide iniciar sesión y comprar. Solo se eliminan cuentas sin compras para conservar el historial. No se muestran contraseñas.
       </p>
       {editing && (
         <Modal onClose={() => setEditing(null)}>
@@ -176,16 +180,17 @@ export default function AdminUsers() {
               <X />
             </button>
             <span className="eyebrow">GESTIÓN DE CUENTAS</span>
-            <h2 id="user-edit-title">Editar usuario</h2>
+            <h2 id="user-edit-title">{editing.id ? 'Editar usuario' : 'Nuevo usuario'}</h2>
             <form
               noValidate
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 event.preventDefault();
                 const found = validateAccount(editing, state.users, editing.id);
                 setErrors(found);
                 if (Object.keys(found).length) return;
                 try {
-                  saveUser(editing.id, editing);
+                  if (editing.id) await saveUser(editing.id, editing);
+                  else await createUser(editing);
                   setEditing(null);
                 } catch (error) {
                   setErrors({ form: error.message });
@@ -224,11 +229,14 @@ export default function AdminUsers() {
                 >
                   <option value="client">Cliente</option>
                   <option value="admin">Administrador</option>
+                  {state.users.some((account) => account.id === editing.id && account.role === "seller") &&
+                    <option value="seller">Vendedor</option>}
                 </select>
                 {errors.role && (
                   <span className="field-error">{errors.role}</span>
                 )}
               </label>
+              {!editing.id && <label>Contraseña inicial<input aria-label="Contraseña inicial" type="password" minLength={6} maxLength={72} value={editing.password} onChange={(e) => setEditing({ ...editing, password: e.target.value })} required /></label>}
               <p className="dashboard-scope">
                 Un administrador puede gestionar productos y otras cuentas. No
                 puedes quitarte tu propio rol.
@@ -261,10 +269,10 @@ export default function AdminUsers() {
             className="market-modal"
           >
             <h2 id="user-status-title">
-              ¿{target.blocked ? "Desbloquear" : "Bloquear"} a {target.name}?
+              ¿{target.deleting ? 'Eliminar' : target.blocked ? "Desbloquear" : "Bloquear"} a {target.name}?
             </h2>
             <p>
-              {target.blocked
+              {target.deleting ? 'La cuenta se eliminará si no tiene compras. Esta operación no puede deshacerse.' : target.blocked
                 ? "Podrá volver a iniciar sesión y comprar con sus datos existentes."
                 : "No podrá iniciar sesión ni comprar. Su saldo, inventario e historial se conservarán."}
             </p>
@@ -277,16 +285,17 @@ export default function AdminUsers() {
               </button>
               <button
                 className={`button ${target.blocked ? "" : "danger-button"}`}
-                onClick={() => {
+                onClick={async () => {
                   try {
-                    saveUser(target.id, { blocked: !target.blocked });
+                    if (target.deleting) await deleteUser(target.id);
+                    else await saveUser(target.id, { blocked: !target.blocked });
                     setTarget(null);
                   } catch (error) {
                     notify(error.message, "error");
                   }
                 }}
               >
-                Confirmar {target.blocked ? "desbloqueo" : "bloqueo"}
+                Confirmar {target.deleting ? 'eliminación' : target.blocked ? "desbloqueo" : "bloqueo"}
               </button>
             </div>
           </section>

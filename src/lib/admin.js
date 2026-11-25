@@ -1,6 +1,6 @@
 import { normalizeEmail, validEmail } from "./market";
 
-// Agrega pedidos reales del navegador; las recargas no cuentan como ventas.
+// Agrega pedidos persistidos del servidor; las recargas no cuentan como ventas.
 export function dashboardStats(state, now = new Date()) {
   const dateKey = (date) =>
     `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -84,39 +84,7 @@ export function validateAccount(values, users, id) {
     )
   )
     errors.email = "Este correo ya está registrado.";
-  if (!["client", "admin"].includes(values.role))
+  if (!["client", "admin", "seller"].includes(values.role))
     errors.role = "Selecciona un rol válido.";
   return errors;
-}
-
-export function updateAccount(state, actorId, targetId, changes) {
-  const actor = state.users.find((user) => user.id === actorId);
-  if (!actor || actor.blocked || actor.role !== "admin")
-    throw new Error("Acceso exclusivo para administradores.");
-  const target = state.users.find((user) => user.id === targetId);
-  if (!target) throw new Error("El usuario ya no existe.");
-  // Lista explícita: la edición de perfil no puede cambiar saldo, clave ni compras.
-  const next = {
-    ...target,
-    name: changes.name ?? target.name,
-    email: changes.email ?? target.email,
-    role: changes.role ?? target.role,
-    blocked: changes.blocked ?? !!target.blocked,
-  };
-  const errors = validateAccount(next, state.users, targetId);
-  if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
-  if (typeof next.blocked !== "boolean")
-    throw new Error("Estado de usuario inválido.");
-  if (actorId === targetId && (next.blocked || next.role !== "admin"))
-    throw new Error(
-      "No puedes bloquearte ni quitarte tu propio rol de administrador.",
-    );
-  const users = state.users.map((user) =>
-    user.id === targetId
-      ? { ...next, name: next.name.trim(), email: normalizeEmail(next.email) }
-      : user,
-  );
-  if (!users.some((user) => user.role === "admin" && !user.blocked))
-    throw new Error("Debe existir al menos un administrador activo.");
-  return { ...state, users };
 }

@@ -14,19 +14,20 @@ import { useMarket } from "../context/MarketContext";
 import { money, USD_TO_CLP } from "../lib/market";
 import Modal from "./Modal";
 export default function Layout({ children }) {
-  const { state, user, notice, storageError, setCurrency, logout, topUp } =
+  const { state, user, notice, serviceError, loading, retry, setCurrency, logout, topUp } =
     useMarket();
   const [menu, setMenu] = useState(false);
   const [wallet, setWallet] = useState(false);
   const [amount, setAmount] = useState("1000");
   const [error, setError] = useState("");
+  const seller = user?.role === "seller";
   return (
     <>
       <a className="skip-link" href="#contenido">
         Ir al contenido
       </a>
       <header className="site-header">
-        <Link className="brand" to="/" aria-label="SkinMarket Pro, inicio">
+        <Link className="brand" to={seller ? "/vendedor" : "/"} aria-label="SkinMarket Pro, inicio">
           <span className="brand-symbol">S</span>
           <span>
             SKINMARKET <b>PRO</b>
@@ -45,12 +46,13 @@ export default function Layout({ children }) {
           className={menu ? "main-nav open" : "main-nav"}
           onClick={() => setMenu(false)}
         >
-          <NavLink to="/" end>
-            Inicio
-          </NavLink>
-          <NavLink to="/productos">Mercado</NavLink>
-          <NavLink to="/inventario">Inventario</NavLink>
-          <NavLink to="/compras">Mis compras</NavLink>
+          {seller ? <NavLink to="/vendedor">Panel de vendedor</NavLink> : <>
+            <NavLink to="/" end>Inicio</NavLink>
+            <NavLink to="/productos">Mercado</NavLink>
+            <NavLink to="/inventario">Inventario</NavLink>
+            <NavLink to="/compras">Mis compras</NavLink>
+            {user?.role === "client" && <NavLink to="/vender">Vender skins</NavLink>}
+          </>}
           {user?.role === "admin" && (
             <NavLink to="/admin">Administración</NavLink>
           )}
@@ -74,7 +76,7 @@ export default function Layout({ children }) {
             <option>USD</option>
             <option>CLP</option>
           </select>
-          {user && (
+          {user && !seller && (
             <button
               className="wallet-button"
               aria-label="Recargar saldo virtual"
@@ -90,21 +92,21 @@ export default function Layout({ children }) {
               </span>
             </button>
           )}
-          <NavLink
+          {!seller && <NavLink
             to="/carrito"
             className="cart-link"
             aria-label={`Carrito, ${user?.cart.reduce((n, l) => n + l.quantity, 0) || 0} artículos`}
           >
             <ShoppingCart size={23} />
             <b>{user?.cart.reduce((n, l) => n + l.quantity, 0) || 0}</b>
-          </NavLink>
+          </NavLink>}
           {user ? (
             <div className="profile">
               <span className="avatar">{user.name[0]}</span>
               <span>
                 {user.name}
                 <small>
-                  {user.role === "admin" ? "Administrador" : "Jugador CS2"}
+                  {{ admin: "Administrador", seller: "Vendedor", client: "Jugador CS2" }[user.role]}
                 </small>
               </span>
               <button
@@ -122,13 +124,12 @@ export default function Layout({ children }) {
           )}
         </div>
       </header>
-      {storageError && (
+      {serviceError && (
         <p className="storage-warning" role="alert">
-          El navegador no permite guardar los cambios. Se perderán al cerrar
-          esta página.
+          {serviceError} <button onClick={retry}>Reintentar conexión</button>
         </p>
       )}
-      <main id="contenido">{children}</main>
+      <main id="contenido">{loading ? <p role="status" className="empty-state">Conectando con SkinMarket…</p> : children}</main>
       <footer className="site-footer">
         <Link className="brand" to="/">
           <span className="brand-symbol">S</span> SKINMARKET <b>PRO</b>
@@ -157,7 +158,7 @@ export default function Layout({ children }) {
           {notice.text}
         </div>
       )}
-      {wallet && (
+      {wallet && !seller && (
         <Modal onClose={() => setWallet(false)}>
           <section
             className="market-modal"
@@ -183,10 +184,10 @@ export default function Layout({ children }) {
               de demostración).
             </p>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 try {
-                  topUp(
+                  await topUp(
                     Number(amount) /
                       (state.currency === "CLP" ? USD_TO_CLP : 1),
                   );

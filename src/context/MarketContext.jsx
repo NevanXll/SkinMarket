@@ -1,221 +1,105 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import {
-  checkout,
-  freshState,
-  loadState,
-  normalizeEmail,
-  saveState,
-  validateAuth,
-  validateProduct,
-  STORAGE_KEY,
-} from "../lib/market";
-import { updateAccount } from "../lib/admin";
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { api, restoreSession, setAccessToken } from '../services/api';
+import { validateAuth, validateProduct } from '../lib/market';
 import { createId } from '../lib/id';
 const MarketContext = createContext(null);
+const roles = { ADMIN: 'admin', CLIENTE: 'client', VENDEDOR: 'seller' };
+const accountView = (u) => ({ ...u, role: roles[u.role], cart: [], orders: [], inventory: [] });
+function currencyPreference() { try { return localStorage.getItem('skinmarket-currency') === 'CLP' ? 'CLP' : 'USD'; } catch { return 'USD'; } }
 export function MarketProvider({ children }) {
-  const [state, setState] = useState(loadState);
+  const [state, setState] = useState(() => ({ products: [], users: [], sessionId: null, currency: currencyPreference() }));
   const [notice, setNotice] = useState(null);
-  const [storageError, setStorageError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [serviceError, setServiceError] = useState('');
   const current = useRef(state);
   const timer = useRef();
-  const user =
-    state.users.find((u) => u.id === state.sessionId && !u.blocked) || null;
-  useEffect(() => {
-    function sync(event) {
-      if (event.key !== STORAGE_KEY && event.key !== null) return;
-      const next = loadState();
-      current.current = next;
-      setState(next);
-    }
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
-  }, []);
-  function notify(text, type = "success") {
-    setNotice({ text, type });
-    clearTimeout(timer.current);
+  const pendingPurchase = useRef(null);
+  const queue = useRef(Promise.resolve());
+  function commit(next) { current.current = next; setState(next); }
+  function notify(text, type = 'success') {
+    setNotice({ text, type }); clearTimeout(timer.current);
     timer.current = setTimeout(() => setNotice(null), 5000);
   }
-  useEffect(() => () => clearTimeout(timer.current), []);
-  function commit(next) {
-    current.current = next;
-    setState(next);
-    setStorageError(!saveState(next));
+  async function synchronize(authenticated = !!current.current.sessionId) {
+    const products = await api('/products');
+    if (!authenticated) { commit({ ...current.current, products, users: [], sessionId: null }); return; }
+    const me = accountView(await api('/me'));
+    if (me.role === 'seller') {
+      commit({ ...current.current, products, users: [me], sessionId: me.id });
+      return;
+    }
+    const [cart, orders, inventory] = await Promise.all([api('/cart'), api('/orders'), api('/inventory')]);
+    let users = [me];
+    if (me.role === 'admin') {
+      const [accounts, purchases] = await Promise.all([api('/admin/users'), api('/admin/orders')]);
+      users = accounts.map((u) => ({ ...accountView(u), orders: purchases.filter((o) => o.userId === u.id) }));
+    }
+    users = users.map((u) => u.id === me.id ? { ...me, cart, inventory, orders } : u);
+    commit({ ...current.current, products, users, sessionId: me.id });
   }
-  function updateUser(transform) {
-    const s = current.current;
-    if (!s.sessionId) throw new Error("Inicia sesión para continuar.");
-    commit({
-      ...s,
-      users: s.users.map((u) => (u.id === s.sessionId ? transform(u) : u)),
+  async function initialize() {
+    setLoading(true); setServiceError('');
+    try {
+      let authenticated = false;
+      try { await restoreSession(); authenticated = true; }
+      catch (error) { if (error.status !== 401) throw error; }
+      await synchronize(authenticated);
+    } catch (error) { setServiceError(error.message); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { initialize(); return () => clearTimeout(timer.current); }, []);
+  async function authenticate(values, register = false) {
+    if (Object.keys(validateAuth(values, register)).length) throw new Error('Revisa los campos del formulario.');
+    const session = await api(`/auth/${register ? 'register' : 'login'}`, { method: 'POST', body: values });
+    setAccessToken(session.accessToken); await synchronize(true);
+    notify(register ? 'Cuenta creada correctamente.' : `Bienvenido, ${session.user.name}.`);
+    return accountView(session.user);
+  }
+  function mutate(operation, message) {
+    const job = queue.current.catch(() => {}).then(async () => {
+      await operation(); await synchronize(); if (message) notify(message);
     });
+    queue.current = job; return job;
   }
-  function login(values) {
-    if (Object.keys(validateAuth(values)).length)
-      throw new Error("Revisa el correo y la contraseña.");
-    const account = current.current.users.find(
-      (u) =>
-        u.email === normalizeEmail(values.email) &&
-        u.password === values.password,
-    );
-    if (!account) throw new Error("Correo o contraseña incorrectos.");
-    if (account.blocked)
-      throw new Error("Tu cuenta está bloqueada. Contacta al administrador.");
-    commit({ ...current.current, sessionId: account.id });
-    notify(`Bienvenido, ${account.name}.`);
-    return account;
-  }
-  function register(values) {
-    if (Object.keys(validateAuth(values, true)).length)
-      throw new Error("Revisa los campos del registro.");
-    const s = current.current;
-    if (s.users.some((u) => u.email === normalizeEmail(values.email)))
-      throw new Error("Este correo ya está registrado.");
-    const account = {
-      id: createId(),
-      name: values.name.trim(),
-      email: normalizeEmail(values.email),
-      password: values.password,
-      role: "client",
-      balance: 12500,
-      cart: [],
-      inventory: [],
-      orders: [],
-    };
-    commit({ ...s, users: [...s.users, account], sessionId: account.id });
-    notify("Cuenta creada. Tienes saldo virtual para explorar.");
-  }
-  function addToCart(productId) {
-    const s = current.current;
-    const p = s.products.find((p) => p.id === productId);
-    if (!p || !p.stock) throw new Error("Esta skin no tiene stock.");
-    updateUser((u) => {
-      const line = u.cart.find((l) => l.productId === productId);
-      if ((line?.quantity || 0) >= p.stock)
-        throw new Error("Ya agregaste todas las unidades disponibles.");
-      return {
-        ...u,
-        cart: line
-          ? u.cart.map((l) =>
-              l.productId === productId
-                ? { ...l, quantity: l.quantity + 1 }
-                : l,
-            )
-          : [...u.cart, { productId, quantity: 1 }],
-      };
-    });
-    notify("Skin añadida al carrito.");
-  }
-  function changeQuantity(id, quantity) {
-    if (!Number.isInteger(quantity) || quantity < 0)
-      throw new Error("Cantidad inválida.");
-    const product = current.current.products.find((p) => p.id === id);
-    if (quantity && (!product || quantity > product.stock))
-      throw new Error("No hay suficiente stock.");
-    updateUser((u) => ({
-      ...u,
-      cart:
-        quantity === 0
-          ? u.cart.filter((l) => l.productId !== id)
-          : u.cart.map((l) => (l.productId === id ? { ...l, quantity } : l)),
-    }));
-  }
-  function buy() {
-    commit(checkout(current.current, current.current.sessionId));
-    notify("Compra realizada con éxito. Tus skins ya están en el inventario.");
-  }
-  function topUp(amount) {
-    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000)
-      throw new Error("Ingresa un monto entre 0,01 y 100.000 USD.");
-    updateUser((u) => ({
-      ...u,
-      balance: Math.round((u.balance + amount) * 100) / 100,
-    }));
-    notify("Saldo virtual recargado.");
-  }
-  function requireAdmin() {
-    if (
-      current.current.users.find((u) => u.id === current.current.sessionId)
-        ?.role !== "admin"
-    )
-      throw new Error("Acceso exclusivo para administradores.");
-    if (
-      current.current.users.find((u) => u.id === current.current.sessionId)
-        ?.blocked
-    )
-      throw new Error("Tu cuenta está bloqueada.");
-  }
-  function saveUser(id, changes) {
-    commit(
-      updateAccount(current.current, current.current.sessionId, id, changes),
-    );
-    notify("Usuario actualizado.");
-  }
-  function saveProduct(product) {
-    requireAdmin();
-    if (Object.keys(validateProduct(product)).length)
-      throw new Error("Revisa los datos del producto.");
-    const s = current.current;
-    const p = {
-      ...product,
-      id: product.id || createId(),
-      price: Number(product.price),
-      stock: Number(product.stock),
-      name: product.name.trim(),
-      weapon: product.name.split(" | ")[0],
-      finish: product.name.split(" | ")[1] || "Edición especial",
-    };
-    commit({
-      ...s,
-      products: product.id
-        ? s.products.map((old) => (old.id === p.id ? p : old))
-        : [...s.products, p],
-    });
-    notify(product.id ? "Producto actualizado." : "Producto creado.");
-  }
-  function deleteProduct(id) {
-    requireAdmin();
-    const s = current.current;
-    commit({
-      ...s,
-      products: s.products.filter((p) => p.id !== id),
-      users: s.users.map((u) => ({
-        ...u,
-        cart: u.cart.filter((l) => l.productId !== id),
-      })),
-    });
-    notify("Producto eliminado del catálogo.");
-  }
-  return (
-    <MarketContext.Provider
-      value={{
-        state,
-        user,
-        notice,
-        storageError,
-        notify,
-        login,
-        register,
-        addToCart,
-        changeQuantity,
-        buy,
-        topUp,
-        saveProduct,
-        deleteProduct,
-        saveUser,
-        setCurrency: (currency) => commit({ ...current.current, currency }),
-        logout: () => {
-          commit({ ...current.current, sessionId: null });
-          notify("Sesión cerrada.");
-        },
-        resetDemo: () => {
-          requireAdmin();
-          commit(freshState());
-          notify("Datos de demostración restaurados.");
-        },
-      }}
-    >
-      {children}
-    </MarketContext.Provider>
-  );
+  const getUser = () => current.current.users.find((u) => u.id === current.current.sessionId);
+  const userInput = (u) => ({ ...u, role: Object.keys(roles).find((role) => roles[role] === u.role) });
+  return <MarketContext.Provider value={{
+    state, user: state.users.find((u) => u.id === state.sessionId) || null,
+    notice, loading, serviceError, retry: initialize, refreshAccount: () => synchronize(true), notify,
+    login: (v) => authenticate(v), register: (v) => authenticate(v, true),
+    logout: async () => {
+      try { await api('/auth/logout', { method: 'POST' }); }
+      catch (e) { notify(e.message, 'error'); return; }
+      setAccessToken(null); pendingPurchase.current = null;
+      commit({ ...current.current, sessionId: null, users: [] });
+    },
+    addToCart: (id) => mutate(async () => {
+      const u = getUser(); if (!u) throw new Error('Inicia sesión para continuar.');
+      const quantity = (u.cart.find((l) => l.productId === id)?.quantity || 0) + 1;
+      await api(`/cart/${id}`, { method: 'PUT', body: { quantity } });
+    }, 'Skin añadida al carrito.'),
+    changeQuantity: (id, quantity) => mutate(() => api(`/cart/${id}`, { method: 'PUT', body: { quantity } })),
+    buy: () => mutate(async () => {
+      pendingPurchase.current ||= createId();
+      await api('/orders', { method: 'POST', body: { requestKey: pendingPurchase.current } });
+    }, 'Compra realizada con éxito. Revisa tu inventario.').then(() => { pendingPurchase.current = null; }),
+    topUp: (amount) => mutate(() => api('/wallet/top-up', { method: 'POST', body: { amount: Math.round(amount * 100) / 100 } }), 'Saldo virtual recargado.'),
+    saveProduct: (p) => {
+      if (Object.keys(validateProduct(p)).length) return Promise.reject(new Error('Revisa los datos del producto.'));
+      return mutate(() => api(`/products${p.id ? `/${p.id}` : ''}`, { method: p.id ? 'PUT' : 'POST', body: { ...p, price: Number(p.price), stock: Number(p.stock) } }), 'Producto guardado.');
+    },
+    deleteProduct: (id) => mutate(() => api(`/products/${id}`, { method: 'DELETE' }), 'Producto eliminado.'),
+    saveUser: (id, changes) => mutate(() => {
+      const target = current.current.users.find((u) => u.id === id);
+      return api(`/admin/users/${id}`, { method: 'PUT', body: userInput({ ...target, ...changes }) });
+    }, 'Usuario actualizado.'),
+    createUser: (values) => mutate(() => api('/admin/users', { method: 'POST', body: userInput(values) }), 'Usuario creado.'),
+    deleteUser: (id) => mutate(() => api(`/admin/users/${id}`, { method: 'DELETE' }), 'Usuario eliminado.'),
+    setCurrency: (currency) => {
+      currency = currency === 'CLP' ? 'CLP' : 'USD';
+      try { localStorage.setItem('skinmarket-currency', currency); } catch { /* Preferencia opcional. */ }
+      commit({ ...current.current, currency });
+    },
+  }}>{children}</MarketContext.Provider>;
 }
-export const useMarket = () => useContext(MarketContext);
+export function useMarket() { return useContext(MarketContext); }

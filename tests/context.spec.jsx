@@ -1,123 +1,21 @@
-import { act, renderHook } from "@testing-library/react";
-import { MarketProvider, useMarket } from "../src/context/MarketContext";
-import {
-  DEMO_ACCOUNTS,
-  freshState,
-  loadState,
-  STORAGE_KEY,
-} from "../src/lib/market";
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { MarketProvider, useMarket } from '../src/context/MarketContext';
+import { mockServer } from './server';
 const wrapper = ({ children }) => <MarketProvider>{children}</MarketProvider>;
-describe("Cuentas, permisos y estado compartido", () => {
-  it("inicia, restaura y cierra sesión, exige credenciales correctas", () => {
-    const { result, unmount } = renderHook(useMarket, { wrapper });
-    expect(() =>
-      act(() => result.current.login({ email: "x", password: "x" })),
-    ).toThrowError(/Revisa/);
-    expect(() =>
-      act(() =>
-        result.current.login({
-          email: DEMO_ACCOUNTS[0].email,
-          password: "incorrecta",
-        }),
-      ),
-    ).toThrowError(/incorrectos/);
-    act(() => result.current.login(DEMO_ACCOUNTS[0]));
-    expect(result.current.user.role).toBe("client");
-    act(() => result.current.setCurrency("CLP"));
-    expect(loadState().currency).toBe("CLP");
-    unmount();
-    const restored = renderHook(useMarket, { wrapper });
-    expect(restored.result.current.user.email).toBe(DEMO_ACCOUNTS[0].email);
-    act(() => restored.result.current.logout());
-    expect(restored.result.current.user).toBeNull();
-  });
-  it("registra cuentas únicas sin privilegios administrativos", () => {
-    const { result } = renderHook(useMarket, { wrapper });
-    expect(() =>
-      act(() => result.current.register({ name: "", email: "", password: "" })),
-    ).toThrowError(/Revisa/);
-    const values = {
-      name: "Nueva cuenta",
-      email: "nuevo@example.cl",
-      password: "123456",
-    };
-    act(() => result.current.register(values));
-    expect(result.current.user.role).toBe("client");
-    expect(() =>
-      act(() =>
-        result.current.register({ ...values, email: " NUEVO@example.cl " }),
-      ),
-    ).toThrowError(/registrado/);
-    expect(() =>
-      act(() => result.current.saveProduct(freshState().products[0])),
-    ).toThrowError(/administradores/);
-    expect(() => act(() => result.current.deleteProduct("x"))).toThrowError(/administradores/);
-    expect(() => act(() => result.current.resetDemo())).toThrowError(/administradores/);
-  });
-  it("gestiona cantidades, stock, recargas y compras separadas por cuenta", () => {
-    const { result } = renderHook(useMarket, { wrapper });
-    const p = result.current.state.products[1];
-    expect(() => act(() => result.current.addToCart(p.id))).toThrowError(/Inicia sesión/);
-    act(() => result.current.login(DEMO_ACCOUNTS[0]));
-    expect(() => act(() => result.current.addToCart("missing"))).toThrowError(/stock/);
-    expect(() =>
-      act(() => result.current.addToCart(result.current.state.products[10].id)),
-    ).toThrowError(/stock/);
-    act(() => result.current.addToCart(p.id));
-    act(() => result.current.addToCart(p.id));
-    expect(() => act(() => result.current.addToCart(p.id))).toThrowError(/disponibles/);
-    expect(() => act(() => result.current.changeQuantity(p.id, -1))).toThrowError(/inválida/);
-    expect(() =>
-      act(() => result.current.changeQuantity("missing", 1)),
-    ).toThrowError(/stock/);
-    expect(() => act(() => result.current.changeQuantity(p.id, 99))).toThrowError(/stock/);
-    act(() => result.current.changeQuantity(p.id, 1));
-    act(() => result.current.changeQuantity(p.id, 0));
-    expect(result.current.user.cart).toHaveLength(0);
-    for (const amount of [0, -1, Infinity, 100001])
-      expect(() => act(() => result.current.topUp(amount))).toThrowError(/monto/);
-    act(() => result.current.topUp(500));
-    expect(result.current.user.balance).toBe(13000);
-    act(() => result.current.addToCart(p.id));
-    act(() => result.current.buy());
-    expect(result.current.user.inventory).toHaveLength(1);
-    act(() => result.current.login(DEMO_ACCOUNTS[1]));
-    expect(result.current.user.inventory).toHaveLength(0);
-  });
-  it("crea, edita y elimina productos y restaura la demostración", () => {
-    const { result } = renderHook(useMarket, { wrapper });
-    act(() => result.current.login(DEMO_ACCOUNTS[1]));
-    expect(() =>
-      act(() =>
-        result.current.saveProduct({ ...freshState().products[0], price: -1 }),
-      ),
-    ).toThrowError(/Revisa/);
-    const { id, ...p } = freshState().products[0];
-    act(() =>
-      result.current.saveProduct({
-        ...p,
-        name: "Nueva skin",
-        price: "10",
-        stock: "2",
-      }),
-    );
-    let added = result.current.state.products.at(-1);
-    expect(added.finish).toBe("Edición especial");
-    act(() =>
-      result.current.saveProduct({
-        ...added,
-        name: "AK-47 | Editada",
-        price: "20",
-      }),
-    );
-    added = result.current.state.products.at(-1);
-    expect(added.price).toBe(20);
-    act(() => result.current.addToCart(added.id));
-    act(() => result.current.deleteProduct(added.id));
-    expect(result.current.user.cart).toEqual([]);
-    expect(result.current.state.products).toHaveLength(24);
-    act(() => result.current.resetDemo());
-    expect(result.current.user).toBeNull();
-    expect(loadState().products).toHaveLength(24);
-  });
+async function setup(role) { const server = mockServer(role); const view = renderHook(useMarket, { wrapper }); await waitFor(() => { if(view.result.current.loading) throw new Error('Cargando'); }); return { ...view, server }; }
+describe('Estado React conectado al servidor', () => {
+  it('restaura sesión por cookie sin claves en almacenamiento', async () => { const { result } = await setup('client'); expect(result.current.user.role).toBe('client'); expect(localStorage.length).toBe(0); });
+  it('carga catálogo público sin sesión', async () => { const { result } = await setup(); expect(result.current.user).toBeNull(); expect(result.current.state.products.length).toBe(24); });
+  it('inicia sesión y cierra revocando cookie', async () => { const { result } = await setup(); await act(async () => { await result.current.login({ email: 'cliente@example.com', password: 'Correct123' }); }); expect(result.current.user).toBeTruthy(); await act(async () => { await result.current.logout(); }); expect(result.current.user).toBeNull(); });
+  it('rechaza validación local antes de enviar registro', async () => { const { result } = await setup(); await expectAsync(result.current.register({ name: '', email: '', password: '' })).toBeRejectedWithError(/campos/); await expectAsync(result.current.login({ email: '', password: '' })).toBeRejected(); });
+  it('registra una cuenta en backend', async () => { const { result } = await setup(); await act(async () => { await result.current.register({ name: 'Nuevo Cliente', email: 'nuevo@example.com', password: 'Correct123' }); }); expect(result.current.user.id).toBe('registered'); });
+  it('serializa adiciones y modifica cantidades', async () => { const { result } = await setup('client'); const id = result.current.state.products[0].id; await act(async () => { await Promise.all([result.current.addToCart(id), result.current.addToCart(id)]); }); expect(result.current.user.cart[0].quantity).toBe(2); await act(async () => { await result.current.changeQuantity(id, 0); }); expect(result.current.user.cart).toEqual([]); });
+  it('envía compra idempotente y actualiza inventario', async () => { const { result } = await setup('client'); await act(async () => { await result.current.addToCart(result.current.state.products[0].id); await result.current.buy(); }); expect(result.current.user.orders.length).toBe(1); expect(result.current.user.inventory.length).toBe(1); expect(result.current.user.cart).toEqual([]); });
+  it('recarga saldo desde API y conserva preferencia CLP', async () => { const { result } = await setup('client'); await act(async () => { await result.current.topUp(10); result.current.setCurrency('CLP'); }); expect(result.current.user.balance).toBe(12510); expect(localStorage.getItem('skinmarket-currency')).toBe('CLP'); act(() => result.current.setCurrency('invalid')); expect(result.current.state.currency).toBe('USD'); });
+  it('crea, edita y elimina productos mediante REST', async () => { const { result } = await setup('admin'); const source = result.current.state.products[0]; const { id, ...input } = source; await act(async () => { await result.current.saveProduct({ ...input, name: 'Skin Nueva' }); }); expect(result.current.state.products.length).toBe(25); await act(async () => { await result.current.saveProduct({ ...source, price: 99 }); }); expect(result.current.state.products.find((p) => p.id === id).price).toBe(99); await act(async () => { await result.current.deleteProduct('new-product'); }); expect(result.current.state.products.length).toBe(24); });
+  it('rechaza producto inválido sin enviarlo', async () => { const { result } = await setup('admin'); await expectAsync(result.current.saveProduct({ ...result.current.state.products[0], price: -1 })).toBeRejected(); });
+  it('realiza CRUD de usuarios como administrador', async () => { const { result } = await setup('admin'); await act(async () => { await result.current.createUser({ name: 'Nuevo', email: 'new@example.com', role: 'client', password: 'Correct123' }); }); expect(result.current.state.users.length).toBe(3); await act(async () => { await result.current.saveUser('new-user', { blocked: true }); }); expect(result.current.state.users.find((u) => u.id === 'new-user').blocked).toBeTrue(); await act(async () => { await result.current.deleteUser('new-user'); }); expect(result.current.state.users.length).toBe(2); });
+  it('muestra fallo de conexión y permite reintentar', async () => { const { result, server } = await setup(); server.fail = 'Servidor no disponible'; await act(async () => { await result.current.retry(); }); expect(result.current.serviceError).toContain('Servidor'); server.fail = ''; await act(async () => { await result.current.retry(); }); expect(result.current.serviceError).toBe(''); });
+  it('no agrega al carrito sin sesión', async () => { const { result } = await setup(); await expectAsync(result.current.addToCart('x')).toBeRejectedWithError(/sesión/); });
+  it('conserva sesión visible si el cierre no pudo confirmarse', async () => { const { result, server } = await setup('client'); server.fail = 'Error del servidor'; await act(async () => { await result.current.logout(); }); expect(result.current.user).toBeTruthy(); expect(result.current.notice.type).toBe('error'); });
 });

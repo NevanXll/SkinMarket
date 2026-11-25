@@ -1,37 +1,4 @@
-import catalog from "../data/catalog.json";
-import { createId } from './id';
-export const STORAGE_KEY = "skinmarket-pro-v2";
 export const USD_TO_CLP = 950;
-export const DEMO_ACCOUNTS = [
-  {
-    id: "client-demo",
-    name: "Alex",
-    email: "cliente@skinmarket.cl",
-    password: "Cliente123",
-    role: "client",
-    balance: 12500,
-    cart: [],
-    inventory: [],
-    orders: [],
-  },
-  {
-    id: "admin-demo",
-    name: "Administrador",
-    email: "admin@skinmarket.cl",
-    password: "Admin123",
-    role: "admin",
-    balance: 12500,
-    cart: [],
-    inventory: [],
-    orders: [],
-  },
-];
-export const freshState = () => ({
-  products: structuredClone(catalog),
-  users: structuredClone(DEMO_ACCOUNTS),
-  sessionId: null,
-  currency: "USD",
-});
 export const normalizeEmail = (value) => value.trim().toLowerCase();
 export const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 export const imageUrl = (value) =>
@@ -42,60 +9,6 @@ export function money(value, currency = "USD") {
     currency,
     maximumFractionDigits: currency === "CLP" ? 0 : 2,
   }).format(currency === "CLP" ? value * USD_TO_CLP : value);
-}
-export function loadState(storage = localStorage) {
-  try {
-    const saved = JSON.parse(storage.getItem(STORAGE_KEY));
-    if (
-      !saved ||
-      !Array.isArray(saved.products) ||
-      !Array.isArray(saved.users) ||
-      !saved.users.length
-    )
-      return freshState();
-    if (
-      !saved.users.every(
-        (u) =>
-          typeof u.id === "string" &&
-          typeof u.email === "string" &&
-          typeof u.password === "string" &&
-          ["client", "admin"].includes(u.role) &&
-          Number.isFinite(u.balance) &&
-          u.balance >= 0 &&
-          [u.cart, u.inventory, u.orders].every(Array.isArray),
-      )
-    )
-      return freshState();
-    if (
-      !saved.products.every(
-        (p) =>
-          typeof p.id === "string" &&
-          typeof p.name === "string" &&
-          Number.isFinite(p.price) &&
-          p.price >= 0 &&
-          Number.isInteger(p.stock) &&
-          p.stock >= 0,
-      )
-    )
-      return freshState();
-    return {
-      ...saved,
-      sessionId: saved.users.some((u) => u.id === saved.sessionId && !u.blocked)
-        ? saved.sessionId
-        : null,
-      currency: saved.currency === "CLP" ? "CLP" : "USD",
-    };
-  } catch {
-    return freshState();
-  }
-}
-export function saveState(state, storage = localStorage) {
-  try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(state));
-    return true;
-  } catch {
-    return false;
-  }
 }
 export function validateAuth(values, register = false) {
   const errors = {};
@@ -152,61 +65,4 @@ export function cartLines(state, user) {
     ...line,
     product: state.products.find((p) => p.id === line.productId),
   }));
-}
-export function checkout(state, userId, now = new Date().toISOString()) {
-  const user = state.users.find((u) => u.id === userId);
-  if (!user) throw new Error("Inicia sesión para comprar.");
-  if (user.blocked) throw new Error("Tu cuenta está bloqueada.");
-  if (!user.cart.length) throw new Error("Tu carrito está vacío.");
-  const lines = cartLines(state, user);
-  if (
-    lines.some(
-      (l) =>
-        !l.product ||
-        !Number.isInteger(l.quantity) ||
-        l.quantity <= 0 ||
-        l.product.stock < l.quantity,
-    )
-  )
-    throw new Error("Stock insuficiente. Revisa las cantidades del carrito.");
-  const total =
-    Math.round(
-      lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0) * 100,
-    ) / 100;
-  if (total > user.balance)
-    throw new Error(
-      "Saldo insuficiente. Recarga saldo virtual para continuar.",
-    );
-  const order = {
-    id: createId(),
-    date: now,
-    total,
-    items: lines.map((l) => ({ ...l.product, quantity: l.quantity })),
-  };
-  return {
-    ...state,
-    products: state.products.map((p) => ({
-      ...p,
-      stock:
-        p.stock - (user.cart.find((l) => l.productId === p.id)?.quantity || 0),
-    })),
-    users: state.users.map((u) =>
-      u.id !== userId
-        ? u
-        : {
-            ...u,
-            balance: Math.round((u.balance - total) * 100) / 100,
-            cart: [],
-            orders: [order, ...u.orders],
-            inventory: [
-              ...order.items.map((p) => ({
-                ...p,
-                acquiredAt: now,
-                orderId: order.id,
-              })),
-              ...u.inventory,
-            ],
-          },
-    ),
-  };
 }

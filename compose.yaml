@@ -1,0 +1,62 @@
+name: skinmarket
+x-backend: &backend
+  restart: unless-stopped
+  environment: &environment
+    DB_URL: jdbc:mysql://mysql:3306/skinmarket?connectionTimeZone=UTC
+    DB_USER: skinmarket
+    DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET de al menos 32 caracteres}
+    CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080}
+    COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  healthcheck:
+    test: [CMD-SHELL, 'curl -fsS http://localhost:$$PORT/actuator/health || exit 1']
+    interval: 10s
+    timeout: 5s
+    retries: 30
+    start_period: 45s
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: skinmarket
+      MYSQL_USER: skinmarket
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD}
+    volumes: [mysql-data:/var/lib/mysql]
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 40
+  ms-usuarios:
+    <<: *backend
+    build: { context: ., dockerfile: backend/Dockerfile, args: { SERVICE: ms-usuarios } }
+    environment:
+      <<: *environment
+      PORT: 8081
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Define correo del administrador inicial}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Define clave del administrador inicial}
+    ports: ['127.0.0.1:8081:8081']
+    depends_on: { mysql: { condition: service_healthy } }
+  ms-productos:
+    <<: *backend
+    build: { context: ., dockerfile: backend/Dockerfile, args: { SERVICE: ms-productos } }
+    environment: { <<: *environment, PORT: 8082 }
+    ports: ['127.0.0.1:8082:8082']
+    depends_on: { ms-usuarios: { condition: service_healthy } }
+  ms-pedidos:
+    <<: *backend
+    build: { context: ., dockerfile: backend/Dockerfile, args: { SERVICE: ms-pedidos } }
+    environment: { <<: *environment, PORT: 8083 }
+    ports: ['127.0.0.1:8083:8083']
+    depends_on: { ms-usuarios: { condition: service_healthy } }
+  web:
+    build: { context: ., dockerfile: Dockerfile }
+    ports: ['8080:80']
+    depends_on:
+      ms-usuarios: { condition: service_healthy }
+      ms-productos: { condition: service_healthy }
+      ms-pedidos: { condition: service_healthy }
+volumes:
+  mysql-data:

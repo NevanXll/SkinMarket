@@ -1,278 +1,64 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
-import App from "../src/App";
-import { MarketProvider } from "../src/context/MarketContext";
-import { freshState, loadState, STORAGE_KEY } from "../src/lib/market";
-function setup(path = "/", role = null, transform = null) {
-  const s = freshState();
-  if (role) s.sessionId = role === "admin" ? "admin-demo" : "client-demo";
-  if (transform) transform(s);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <MarketProvider>
-        <App />
-      </MarketProvider>
-    </MemoryRouter>,
-  );
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import App from '../src/App';
+import { MarketProvider } from '../src/context/MarketContext';
+import { mockServer } from './server';
+async function setup(path = '/', role = null, transform = () => {}) {
+  const server = mockServer(role); transform(server);
+  render(<MemoryRouter initialEntries={[path]}><MarketProvider><App /></MarketProvider></MemoryRouter>);
+  await waitFor(() => { if(screen.queryByText('Conectando con SkinMarket…')) throw new Error('Cargando'); });
+  return { server, user: userEvent.setup() };
 }
-describe("Pantallas y flujos del usuario", () => {
-  it("muestra inicio, imágenes, filtros y navegación móvil", async () => {
-    const user = userEvent.setup();
-    setup();
-    const filters = within(screen.getByRole("complementary", { name: "Filtros del catálogo" }));
-    expect(filters.queryByText("Juego", { exact: true })).toBeNull();
-    expect(filters.queryByText("Counter-Strike 2", { exact: true })).toBeNull();
-    expect(filters.getByRole("combobox", { name: "Tipo de arma" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /LAS MEJORES/ }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Abrir menú" }));
-    expect(screen.getByRole("button", { name: "Cerrar menú" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    await user.click(screen.getByRole("link", { name: "Mercado" }));
-    expect(
-      screen.getByRole("heading", { name: /Encuentra tu próxima/ }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Filtros" }));
-    await user.click(screen.getByRole("button", { name: "Cerrar filtros" }));
-    await user.type(
-      screen.getByRole("textbox", { name: "Buscar skin" }),
-      "Dragon",
-    );
-    expect(
-      screen.getAllByRole("button", { name: "Añadir al carrito" }),
-    ).toHaveLength(2);
-    await user.type(screen.getByRole("textbox", { name: "Buscar skin" }), "<");
-    expect(
-      screen.getByText("Se eliminaron caracteres no permitidos."),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Limpiar" }));
-    await user.selectOptions(screen.getByLabelText("Tipo de arma"), "Pistolas");
-    expect(
-      screen.getAllByRole("button", { name: "Añadir al carrito" }),
-    ).toHaveLength(6);
-    await user.click(screen.getByRole("button", { name: "Todas" }));
-    await user.click(screen.getByRole("checkbox", { name: "Contraband" }));
-    expect(screen.getByRole("heading", { name: "Howl" })).toBeInTheDocument();
-    await user.click(screen.getByRole("checkbox", { name: "Contraband" }));
-    fireEvent.change(
-      screen.getByRole("spinbutton", { name: "Precio mínimo" }),
-      { target: { value: "-1" } },
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent("mayores");
-    fireEvent.change(
-      screen.getByRole("spinbutton", { name: "Precio mínimo" }),
-      { target: { value: "100" } },
-    );
-    fireEvent.change(
-      screen.getByRole("spinbutton", { name: "Precio máximo" }),
-      { target: { value: "50" } },
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent("mínimo");
-    await user.click(screen.getByRole("button", { name: "Limpiar" }));
-    await user.selectOptions(
-      screen.getByLabelText("Exterior"),
-      "Battle-Scarred",
-    );
-    expect(screen.getByText("No encontramos esas skins")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Limpiar filtros" }));
-    await user.selectOptions(screen.getByLabelText("Ordenar productos"), "low");
-    await user.selectOptions(
-      screen.getByLabelText("Colección"),
-      screen.getByLabelText("Colección").options[1].value,
-    );
-    await user.click(screen.getByRole("button", { name: "Limpiar" }));
-    await user.click(
-      screen.getAllByRole("button", { name: "Añadir al carrito" })[0],
-    );
-    expect(
-      screen.getByRole("heading", { name: "Bienvenido de vuelta." }),
-    ).toBeInTheDocument();
+describe('Interfaz React con API simulada', () => {
+  it('permite postular y conserva el estado pendiente en pantalla', async () => {
+    const { user, server } = await setup('/vender', 'client');
+    await user.type(await screen.findByLabelText('Skins que quieres vender'), 'AK | Asiimov');
+    await user.type(screen.getByLabelText('Motivo de la solicitud'), 'Quiero vender parte de mi colección.');
+    await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }));
+    expect(await screen.findByText('Estado: En revisión')).toBeTruthy();
+    expect(server.applications[0].skins).toBe('AK | Asiimov');
   });
-  it("valida login, credenciales, sesión, recarga y logout", async () => {
-    const user = userEvent.setup();
-    setup("/acceso");
-    await user.click(
-      screen.getByRole("button", { name: "Entrar a SkinMarket" }),
-    );
-    expect(screen.getByText(/correo con @/)).toBeInTheDocument();
-    await user.type(
-      screen.getByLabelText("Correo electrónico"),
-      "nadie@example.cl",
-    );
-    await user.type(screen.getByLabelText("Contraseña"), "123456");
-    await user.click(
-      screen.getByRole("button", { name: "Entrar a SkinMarket" }),
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent("incorrectos");
-    await user.click(screen.getByRole("button", { name: "Cliente" }));
-    await user.click(
-      screen.getByRole("button", { name: "Entrar a SkinMarket" }),
-    );
-    expect(loadState().sessionId).toBe("client-demo");
-    await user.selectOptions(screen.getByLabelText("Moneda"), "CLP");
-    await user.click(
-      screen.getByRole("button", { name: "Recargar saldo virtual" }),
-    );
-    const dialog = screen.getByRole("dialog");
-    fireEvent.change(within(dialog).getByRole("spinbutton"), {
-      target: { value: "950000" },
+  it('permite a un administrador aprobar una solicitud', async () => {
+    const { user, server } = await setup('/admin', 'admin', (s) => {
+      s.applications.push({ userId: 'client-test', name: 'Cliente Prueba', email: 'cliente@example.com',
+        skins: 'AK | Asiimov', reason: 'Quiero vender parte de mi colección.', status: 'PENDIENTE' });
     });
-    await user.click(
-      within(dialog).getByRole("button", { name: "Añadir saldo virtual" }),
-    );
-    expect(loadState().users[0].balance).toBe(13500);
-    await user.click(
-      screen.getByRole("button", { name: "Recargar saldo virtual" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Cerrar recarga" }));
-    await user.click(screen.getByRole("button", { name: "Cerrar sesión" }));
-    expect(loadState().sessionId).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Solicitudes de vendedor' }));
+    await user.click(await screen.findByRole('button', { name: 'Aprobar' }));
+    expect(await screen.findByText('Estado: Aprobada')).toBeTruthy();
+    expect(server.accounts[0].role).toBe('VENDEDOR');
   });
-  it("registra, rechaza duplicados y valida nombre", async () => {
-    const user = userEvent.setup();
-    setup("/acceso");
-    await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
-    await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
-    expect(screen.getByText(/nombre debe/)).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Nombre"), "Camila");
-    await user.type(
-      screen.getByLabelText("Correo electrónico"),
-      "cliente@skinmarket.cl",
-    );
-    await user.type(screen.getByLabelText("Contraseña"), "123456");
-    await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("registrado");
-    await user.clear(screen.getByLabelText("Correo electrónico"));
-    await user.type(
-      screen.getByLabelText("Correo electrónico"),
-      "camila@example.cl",
-    );
-    await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
-    expect(loadState().users).toHaveLength(3);
-  });
-  it("compra, muestra inventario y conserva el historial al quitar el producto", async () => {
-    const user = userEvent.setup();
-    setup("/productos", "client");
-    await user.click(
-      screen.getAllByRole("button", { name: "Añadir al carrito" })[0],
-    );
-    await user.click(
-      screen.getByRole("link", { name: /Carrito, 1 artículos/ }),
-    );
-    expect(
-      screen.getByRole("heading", { name: "Resumen de compra" }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Confirmar compra" }));
-    expect(
-      screen.getByRole("heading", { name: /Mi inventario/ }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/1 unidad/)).toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Mis compras" }));
-    expect(screen.getByText("Completada")).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("link", { name: /Carrito, 0 artículos/ }),
-    );
-    expect(screen.getByText("Tu carrito está esperando")).toBeInTheDocument();
-  });
-  it("actualiza cantidades, elimina líneas y bloquea compra sin saldo", async () => {
-    const user = userEvent.setup();
-    setup("/carrito", "client", (s) => {
-      s.users[0].cart = [{ productId: s.products[1].id, quantity: 1 }];
-      s.users[0].balance = 0;
+  it('muestra un panel de vendedor de solo lectura con detalle de órdenes', async () => {
+    const { user } = await setup('/vendedor', 'seller', (s) => {
+      s.orders.push({ id: 'purchase-1', date: '2026-11-24T12:00:00Z', total: 10, items: [{ id: 'p1', name: 'Skin de prueba', quantity: 1 }] });
     });
-    expect(
-      screen.getByRole("button", { name: "Confirmar compra" }),
-    ).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: /Aumentar/ }));
-    expect(loadState().users[0].cart[0].quantity).toBe(2);
-    await user.click(screen.getByRole("button", { name: /Reducir/ }));
-    await user.click(screen.getByRole("button", { name: /Quitar/ }));
-    expect(screen.getByText("Tu carrito está esperando")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir al carrito' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Administración' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Órdenes' }));
+    await user.click(await screen.findByRole('link', { name: 'Ver detalle' }));
+    expect(await screen.findByText('1 × Skin de prueba')).toBeTruthy();
   });
-  it("bloquea stock insuficiente y presenta compras vacías", async () => {
-    const user = userEvent.setup();
-    setup("/carrito", "client", (s) => {
-      s.users[0].cart = [{ productId: s.products[10].id, quantity: 1 }];
-    });
-    expect(screen.getByRole("alert")).toHaveTextContent("Stock insuficiente");
-    await user.click(screen.getByRole("link", { name: "Mis compras" }));
-    expect(screen.getByText("Aún no tienes compras")).toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Inventario" }));
-    expect(
-      screen.getByText("Tu colección comienza con una skin"),
-    ).toBeInTheDocument();
-  });
-  it("protege rutas y presenta página no encontrada", () => {
-    setup("/admin");
-    expect(
-      screen.getByRole("heading", { name: "Bienvenido de vuelta." }),
-    ).toBeInTheDocument();
-  });
-  it("rechaza acceso administrativo de clientes", () => {
-    setup("/admin", "client");
-    expect(
-      screen.getByRole("heading", { name: "Acceso restringido" }),
-    ).toBeInTheDocument();
-  });
-  it("presenta 404", () => {
-    setup("/no-existe");
-    expect(
-      screen.getByRole("heading", { name: /Fuera del mapa/ }),
-    ).toBeInTheDocument();
-  });
-  it("administra catálogo completo con confirmación de borrado", async () => {
-    const user = userEvent.setup();
-    setup("/admin", "admin");
-    await user.click(screen.getByRole("button", { name: "Nuevo producto" }));
-    await user.click(screen.getByRole("button", { name: "Guardar producto" }));
-    expect(screen.getByText(/Usa un nombre/)).toBeInTheDocument();
-    await user.type(
-      screen.getByLabelText("Nombre (arma | acabado)"),
-      "AK-47 | Prueba",
-    );
-    await user.type(screen.getByLabelText("Precio base en USD"), "50");
-    await user.type(screen.getByLabelText("Stock"), "2");
-    await user.selectOptions(screen.getByLabelText("Categoría"), "Pistolas");
-    await user.selectOptions(screen.getByLabelText("Rareza"), "Restricted");
-    await user.selectOptions(screen.getByLabelText("Exterior"), "Minimal Wear");
-    await user.click(screen.getByLabelText("Mostrar en destacadas"));
-    await user.click(screen.getByRole("button", { name: "Guardar producto" }));
-    expect(loadState().products).toHaveLength(25);
-    await user.type(
-      screen.getByLabelText("Buscar producto administrativo"),
-      "Prueba",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Editar AK-47 | Prueba" }),
-    );
-    await user.clear(screen.getByLabelText("Precio base en USD"));
-    await user.type(screen.getByLabelText("Precio base en USD"), "60");
-    await user.click(screen.getByRole("button", { name: "Guardar producto" }));
-    expect(loadState().products.at(-1).price).toBe(60);
-    await user.click(
-      screen.getByRole("button", { name: "Eliminar AK-47 | Prueba" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Cancelar" }));
-    expect(loadState().products).toHaveLength(25);
-    await user.click(
-      screen.getByRole("button", { name: "Eliminar AK-47 | Prueba" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Confirmar" }));
-    expect(loadState().products).toHaveLength(24);
-    await user.clear(screen.getByLabelText("Buscar producto administrativo"));
-    await user.click(screen.getByRole("button", { name: "Nuevo producto" }));
-    await user.click(screen.getByRole("button", { name: "Cerrar editor" }));
-    await user.click(screen.getByRole("button", { name: "Nuevo producto" }));
-    await user.click(screen.getByRole("button", { name: "Cancelar" }));
-    await user.click(
-      screen.getByRole("button", { name: "Restaurar demostración" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Confirmar" }));
-    expect(loadState().sessionId).toBeNull();
-  }, 20000);
+  it('muestra inicio, menú móvil y catálogo sin selector de juego', async () => { const { user } = await setup(); expect(screen.getByRole('heading', { name: /LAS MEJORES/ })).toBeTruthy(); expect(within(screen.getByRole('complementary', { name: 'Filtros del catálogo' })).queryByText('Juego')).toBeNull(); await user.click(screen.getByLabelText('Abrir menú')); await user.click(screen.getByRole('link', { name: 'Mercado' })); expect(screen.getByRole('heading', { name: /Encuentra tu próxima/ })).toBeTruthy(); await user.click(screen.getByRole('button', { name: 'Filtros', exact: true })); await user.click(screen.getByLabelText('Cerrar filtros')); });
+  it('limpia caracteres extraños y permite restablecer filtros', async () => { const { user } = await setup('/productos'); await user.type(screen.getByLabelText('Buscar skin'), 'Dragon<'); expect(screen.getByText('Se eliminaron caracteres no permitidos.')).toBeTruthy(); await user.click(screen.getByRole('button', { name: 'Limpiar', exact: true })); await user.selectOptions(screen.getByLabelText('Tipo de arma'), 'Pistolas'); });
+  it('rechaza un rango de precios invertido', async () => { await setup('/productos'); const numbers = screen.getAllByRole('spinbutton'); fireEvent.change(numbers[0], { target: { value: '100' } }); fireEvent.change(numbers[1], { target: { value: '1' } }); expect(screen.getByText('El mínimo no puede superar al máximo.')).toBeTruthy(); });
+  it('muestra validaciones y credenciales erróneas', async () => { const { user } = await setup('/acceso'); await user.click(screen.getByRole('button', { name: 'Entrar a SkinMarket' })); expect(screen.getByText(/correo con @/)).toBeTruthy(); await user.type(screen.getByLabelText('Correo electrónico'), 'cliente@example.com'); await user.type(screen.getByLabelText('Contraseña'), 'Wrong123'); await user.click(screen.getByRole('button', { name: 'Entrar a SkinMarket' })); expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales incorrectas'); });
+  it('inicia sesión y navega al mercado', async () => { const { user } = await setup('/acceso'); await user.type(screen.getByLabelText('Correo electrónico'), 'cliente@example.com'); await user.type(screen.getByLabelText('Contraseña'), 'Correct123'); await user.click(screen.getByRole('button', { name: 'Entrar a SkinMarket' })); expect(await screen.findByRole('heading', { name: /Encuentra tu próxima/ })).toBeTruthy(); });
+  it('registra desde la pantalla de acceso', async () => { const { user } = await setup('/acceso'); await user.click(screen.getByRole('button', { name: 'Crear cuenta', exact: true })); await user.type(screen.getByLabelText('Nombre'), 'Nueva Persona'); await user.type(screen.getByLabelText('Correo electrónico'), 'nuevo@example.com'); await user.type(screen.getByLabelText('Contraseña'), 'Correct123'); await user.click(screen.getByRole('button', { name: /Crear mi cuenta/ })); expect(await screen.findByRole('heading', { name: /Encuentra tu próxima/ })).toBeTruthy(); });
+  it('protege rutas de cliente y administrador', async () => { await setup('/admin', 'client'); expect(screen.getByRole('heading', { name: 'Acceso restringido' })).toBeTruthy(); });
+  it('redirige carrito anónimo al login', async () => { await setup('/carrito'); expect(await screen.findByRole('button', { name: 'Entrar a SkinMarket' })).toBeTruthy(); });
+  it('muestra carrito vacío', async () => { await setup('/carrito', 'client'); expect(screen.getByText('Tu carrito está esperando')).toBeTruthy(); });
+  it('agrega, compra y muestra inventario', async () => { const { user } = await setup('/productos', 'client'); await user.click(screen.getAllByRole('button', { name: 'Añadir al carrito' })[0]); await user.click(screen.getByRole('link', { name: /Carrito, 1/ })); await user.click(screen.getByRole('button', { name: /Confirmar compra/ })); expect(await screen.findByRole('heading', { name: /inventario/i })).toBeTruthy(); });
+  it('cambia cantidades y elimina líneas', async () => { const { user } = await setup('/carrito', 'client', (s) => { s.cart = [{ productId: s.products[0].id, quantity: 2 }]; }); await user.click(screen.getByLabelText(/^Reducir/)); await waitFor(() => expect(screen.getByRole('link', { name: /Carrito, 1/ })).toBeTruthy()); await user.click(screen.getByLabelText(/^Quitar/)); expect(await screen.findByText('Tu carrito está esperando')).toBeTruthy(); });
+  it('muestra restricción de saldo y stock', async () => { await setup('/carrito', 'client', (s) => { s.current.balance = 0; s.cart = [{ productId: s.products[0].id, quantity: 99999 }]; }); expect(screen.getByRole('button', { name: /Confirmar compra/ })).toBeDisabled(); expect(screen.getByText(/Stock insuficiente. Reduce/)).toBeTruthy(); });
+  it('recarga billetera y cambia moneda', async () => { const { user } = await setup('/productos', 'client'); await user.selectOptions(screen.getByLabelText('Moneda'), 'CLP'); await user.click(screen.getByLabelText('Recargar saldo virtual')); const dialog = within(screen.getByRole('dialog')); await user.click(dialog.getByRole('button', { name: 'Añadir saldo virtual' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); });
+  it('muestra compras vacías y 404', async () => { await setup('/compras', 'client'); expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/compras/i); });
+  it('muestra página inexistente', async () => { await setup('/inexistente'); expect(screen.getByText('404 · Fuera del mapa')).toBeTruthy(); });
+  it('consulta detalle REST por identificador', async () => { const { server } = await setup(); const link = screen.getAllByRole('link').find((a) => a.getAttribute('href')?.includes(`/productos/${server.products[0].id}`)); fireEvent.click(link); expect(await screen.findByRole('heading', { level: 1, name: server.products[0].name })).toBeTruthy(); });
+  it('muestra error 404 de detalle', async () => { await setup('/productos/no-existe'); expect(await screen.findByRole('alert')).toHaveTextContent('Producto no encontrado'); });
+  it('muestra dashboard sin ventas inventadas', async () => { await setup('/admin', 'admin'); expect(screen.getByRole('heading', { name: /Administración/ })).toBeTruthy(); });
+  it('edita producto y confirma su eliminación', async () => { const { user, server } = await setup('/admin', 'admin'); await user.click(screen.getByRole('button', { name: 'Productos', exact: true })); const name = server.products[0].name; await user.click(screen.getByLabelText(`Editar ${name}`)); const input = screen.getByLabelText('Precio base en USD'); fireEvent.change(input, { target: { value: '20' } }); await user.click(screen.getByRole('button', { name: 'Guardar producto' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); await user.click(screen.getByLabelText(`Eliminar ${name}`)); await user.click(screen.getByRole('button', { name: 'Confirmar', exact: true })); await waitFor(() => expect(screen.queryByLabelText(`Eliminar ${name}`)).toBeNull()); });
+  it('valida producto nuevo antes de guardarlo', async () => { const { user } = await setup('/admin', 'admin'); await user.click(screen.getByRole('button', { name: 'Nuevo producto' })); await user.click(screen.getByRole('button', { name: 'Guardar producto' })); expect(screen.getByText(/Usa un nombre/)).toBeTruthy(); await user.click(screen.getByLabelText('Cerrar editor')); });
+  it('edita, bloquea y elimina un usuario', async () => { const { user } = await setup('/admin', 'admin'); await user.click(screen.getByRole('button', { name: 'Usuarios', exact: true })); await user.click(screen.getByLabelText('Editar usuario Cliente Prueba')); fireEvent.change(screen.getByLabelText('Nombre del usuario'), { target: { value: 'Cliente Editado' } }); await user.click(screen.getByRole('button', { name: 'Guardar usuario' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); await user.click(screen.getByLabelText('Bloquear usuario Cliente Editado')); await user.click(screen.getByRole('button', { name: 'Confirmar bloqueo' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); await user.click(screen.getByLabelText('Eliminar usuario Cliente Editado')); await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' })); await waitFor(() => expect(screen.queryByLabelText('Eliminar usuario Cliente Editado')).toBeNull()); });
+  it('crea usuario desde administración', async () => { const { user } = await setup('/admin', 'admin'); await user.click(screen.getByRole('button', { name: 'Usuarios', exact: true })); await user.click(screen.getByRole('button', { name: 'Nuevo usuario' })); await user.type(screen.getByLabelText('Nombre del usuario'), 'Nuevo Usuario'); await user.type(screen.getByLabelText('Correo del usuario'), 'nuevo@example.com'); await user.type(screen.getByLabelText('Contraseña inicial'), 'Correct123'); await user.click(screen.getByRole('button', { name: 'Guardar usuario' })); await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull()); expect(screen.getByText('Nuevo Usuario')).toBeTruthy(); });
 });

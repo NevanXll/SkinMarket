@@ -1,18 +1,18 @@
 import { ShoppingCart, Star } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMarket } from "../context/MarketContext";
 import { imageUrl, money } from "../lib/market";
 export default function ProductCard({ product, compact = false }) {
   const { state, user, addToCart, notify } = useMarket();
   const navigate = useNavigate();
-  function add() {
+  async function add() {
     if (!user) {
       notify("Inicia sesión para añadir skins.", "error");
       navigate("/acceso");
       return;
     }
     try {
-      addToCart(product.id);
+      await addToCart(product.id);
     } catch (e) {
       notify(e.message, "error");
     }
@@ -24,7 +24,7 @@ export default function ProductCard({ product, compact = false }) {
     >
       <div className="product-art">
         <span className="wear-label">
-          {product.wear
+          {(product.wear || '')
             .split(" ")
             .map((word) => word[0])
             .join("")}
@@ -36,7 +36,7 @@ export default function ProductCard({ product, compact = false }) {
       </div>
       <div className="product-info">
         <span className="weapon-name">{product.weapon}</span>
-        <h3>{product.finish}</h3>
+        <h3><Link to={`/productos/${product.id}`}>{product.finish}</Link></h3>
         <p className="rarity">
           <i />
           {product.rarity}
@@ -47,7 +47,7 @@ export default function ProductCard({ product, compact = false }) {
             {product.stock ? `${product.stock} disponibles` : "Agotado"}
           </small>
         </div>
-        {!compact && (
+        {!compact && user?.role !== "seller" && (
           <button
             className="button add-button"
             onClick={add}

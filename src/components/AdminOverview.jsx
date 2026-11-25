@@ -31,7 +31,7 @@ export default function AdminOverview() {
           </span>
           <span>VENTAS SIMULADAS · {state.currency}</span>
           <strong>{format(stats.revenue)}</strong>
-          <small>Acumulado de todas las cuentas locales</small>
+            <small>Acumulado de las compras guardadas en MySQL</small>
         </article>
         <article>
           <span className="kpi-icon">
@@ -176,7 +176,7 @@ export default function AdminOverview() {
         >
           <div className="section-heading">
             <div>
-              <span className="eyebrow">EN TIEMPO REAL LOCAL</span>
+              <span className="eyebrow">PEDIDOS DEL SERVIDOR</span>
               <h2>Últimas compras</h2>
             </div>
             <ArrowUpRight size={20} />
@@ -198,7 +198,7 @@ export default function AdminOverview() {
             <p className="chart-note">Aún no se han registrado compras.</p>
           )}
           <p className="dashboard-scope">
-            Datos reales de la simulación de este navegador. Las recargas de
+              Compras registradas en el servidor. Las recargas de
             saldo no se cuentan como ingresos.
           </p>
         </section>

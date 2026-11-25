@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
 import { useMarket } from "../context/MarketContext";
 import { imageUrl, money, validateProduct } from "../lib/market";
-import catalog from "../data/catalog.json";
 import Modal from "../components/Modal";
 import AdminOverview from "../components/AdminOverview";
 import AdminUsers from "../components/AdminUsers";
+import SellerApplicationsAdmin from "../components/SellerApplicationsAdmin";
 import "../admin.css";
 const blank = {
   name: "",
@@ -14,14 +14,15 @@ const blank = {
   color: "#eb4b4b",
   price: "",
   stock: "",
-  image: catalog[0].image,
+  image: "",
   collection: "Colección personalizada",
   wear: "Factory New",
   featured: false,
 };
 export default function Admin() {
   const [tab, setTab] = useState("overview");
-  const { state, saveProduct, deleteProduct, resetDemo, notify } = useMarket();
+  const { state, saveProduct, deleteProduct, notify } = useMarket();
+  const catalog = state.products;
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState(null);
   const [errors, setErrors] = useState({});
@@ -76,6 +77,7 @@ export default function Admin() {
           ["overview", "Resumen"],
           ["products", "Productos"],
           ["users", "Usuarios"],
+          ["sellers", "Solicitudes de vendedor"],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -89,6 +91,7 @@ export default function Admin() {
       </nav>
       {tab === "overview" && <AdminOverview />}
       {tab === "users" && <AdminUsers />}
+      {tab === "sellers" && <SellerApplicationsAdmin />}
       {tab === "products" && (
         <>
           <div className="account-stats">
@@ -115,12 +118,6 @@ export default function Admin() {
                 onChange={(e) => setQuery(e.target.value)}
               />
             </label>
-            <button
-              className="text-button"
-              onClick={() => setConfirmation({ reset: true })}
-            >
-              Restaurar demostración
-            </button>
           </div>
           <div className="table-scroll">
             <table>
@@ -201,13 +198,13 @@ export default function Admin() {
             </h2>
             <form
               noValidate
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 const errors = validateProduct(editing);
                 setErrors(errors);
                 if (Object.keys(errors).length) return;
                 try {
-                  saveProduct(editing);
+                  await saveProduct(editing);
                   setEditing(null);
                 } catch (e) {
                   notify(e.message, "error");
@@ -351,14 +348,10 @@ export default function Admin() {
             aria-labelledby="confirm-title"
           >
             <h2 id="confirm-title">
-              {confirmation.reset
-                ? "¿Restaurar demostración?"
-                : "¿Eliminar producto?"}
+              ¿Eliminar producto?
             </h2>
             <p>
-              {confirmation.reset
-                ? "Se borrarán las cuentas, compras y cambios locales de esta versión. Se restaurarán las cuentas de prueba."
-                : `Se eliminará ${confirmation.name} del catálogo y los carritos. Las compras anteriores se conservarán.`}
+              {`Se eliminará ${confirmation.name} del catálogo y los carritos. Las compras anteriores se conservarán.`}
             </p>
             <div className="modal-actions">
               <button
@@ -369,10 +362,9 @@ export default function Admin() {
               </button>
               <button
                 className="button danger-button"
-                onClick={() => {
-                  if (confirmation.reset) resetDemo();
-                  else deleteProduct(confirmation.id);
-                  setConfirmation(null);
+                onClick={async () => {
+                  try { await deleteProduct(confirmation.id); setConfirmation(null); }
+                  catch (e) { notify(e.message, 'error'); }
                 }}
               >
                 Confirmar

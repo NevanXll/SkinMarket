@@ -31,7 +31,7 @@ module.exports = function (config) {
           } },
         }, { test: /\.css$/, type: 'asset/source' }],
       },
-      plugins: [new webpack.DefinePlugin({ 'import.meta.env.BASE_URL': JSON.stringify('/') })],
+      plugins: [new webpack.DefinePlugin({ 'import.meta.env.BASE_URL': JSON.stringify('/'), 'import.meta.env.VITE_API_BASE_URL': JSON.stringify('/api/v1') })],
       stats: 'errors-warnings',
     },
     reporters: ['progress', 'coverage'],

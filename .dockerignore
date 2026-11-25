@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+tmp
+.git
+.env
+backend/**/target
+.codex-remote-attachments
+entrega
+output
