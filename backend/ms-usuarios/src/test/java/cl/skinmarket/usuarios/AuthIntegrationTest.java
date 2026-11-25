@@ -29,6 +29,13 @@ class AuthIntegrationTest {
  @Test void refreshRotatesAndRejectsOldToken(){var s=auth.register(new Requests.Register("Cliente","a@example.com","Secret123"));var next=auth.refresh(s.refresh());assertNotEquals(s.refresh(),next.refresh());assertThrows(RuntimeException.class,()->auth.refresh(s.refresh()));}
  @Test void logoutRevokesRefresh(){var s=auth.register(new Requests.Register("Cliente","a@example.com","Secret123"));auth.logout(s.refresh());assertThrows(RuntimeException.class,()->auth.refresh(s.refresh()));}
  @Test void anonymousCannotReadUsers() throws Exception {mvc.perform(get("/api/v1/admin/users")).andExpect(status().isUnauthorized());}
+ @Test void anonymousCanOpenSwaggerAndItsConfiguration() throws Exception {
+  mvc.perform(get("/api/v1/usuarios/swagger-ui.html"))
+   .andExpect(status().is3xxRedirection())
+   .andExpect(redirectedUrl("/api/v1/usuarios/swagger-ui/index.html"));
+  mvc.perform(get("/api/v1/usuarios/swagger-ui/index.html")).andExpect(status().isOk());
+  mvc.perform(get("/api/v1/usuarios/openapi/swagger-config")).andExpect(status().isOk());
+ }
  @Test void clientCannotReadUsers() throws Exception {var s=auth.register(new Requests.Register("Cliente","a@example.com","Secret123"));mvc.perform(get("/api/v1/admin/users").header("Authorization","Bearer "+s.body().get("accessToken"))).andExpect(status().isForbidden());}
  @Test void missingCsrfHeaderIsRejected() throws Exception {mvc.perform(post("/api/v1/auth/refresh")).andExpect(status().isForbidden());}
  @Test void foreignOriginIsRejected() throws Exception {mvc.perform(post("/api/v1/auth/refresh").header("X-Requested-With","SkinMarket").header("Origin","https://attacker.example")).andExpect(status().isForbidden());}
