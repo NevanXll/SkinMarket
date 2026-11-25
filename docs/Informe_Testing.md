@@ -48,3 +48,5 @@ La compilación de React y los tres servicios finalizó correctamente. Compose l
 ## Verificación en AWS
 
 La versión integrada se publicó en https://44.200.240.238/ sobre Amazon EC2 en us-east-1. Desde un equipo externo se verificaron el certificado público HTTPS, el catálogo, el registro, la compra, el inventario, la renovación de sesión, la aprobación de vendedor y la restricción de carrito y administración por rol. La cookie de sesión incluyó los atributos Secure y HttpOnly. Chrome mostró correctamente el catálogo público.
+
+En la versión 3.2 publicada se comprobó que el nombre, avatar, biografía y preferencias de privacidad sobrevivan a la renovación de sesión. Un cliente pudo enviar una solicitud con solo el motivo. Su cuenta obtuvo acceso al panel de vendedor tras la aprobación de un administrador.
